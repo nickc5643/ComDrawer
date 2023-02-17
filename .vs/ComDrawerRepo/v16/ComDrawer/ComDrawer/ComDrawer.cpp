@@ -70,8 +70,11 @@ void ComDrawer::createActions()
 	aboutAct = new QAction(tr("&About"), this);
 	connect(aboutAct, SIGNAL(triggered()), SLOT(about()));
 	pencil = new QAction(tr("&Pencil"), this);
-	connect(aboutAct, SIGNAL(triggered()), SLOT(selectDesignTool((0))));
-	toolOptions.append(pencil);
+	connect(pencil, SIGNAL(triggered()), SLOT(selectDesignTool((0))));
+	eraser = new QAction(tr("&Eraser"), this);
+	connect(eraser, SIGNAL(triggered()), SLOT(selectDesignTool((2))));
+	//toolOptions.append(pencil);
+	//toolOptions.append(eraser);
 }
 
 /*
@@ -81,9 +84,10 @@ void ComDrawer::createMenus()
 {
 	fileMenu = new QMenu(tr("&File"), this);
 	toolsMenu = new QMenu(tr("&Tools"), this);
-	for (QAction* action : std::as_const(toolOptions))
-		toolsMenu->addAction(action);
-
+	//for (QAction* action : toolOptions)
+	//	toolsMenu->addAction(action);
+	toolsMenu->addAction(pencil);
+	toolsMenu->addAction(eraser);
 	plotMenu = new QMenu(tr("&Select Panel"), this);
 	openTemplateMenu = new QMenu(tr("&View/Edit Comic"), this);
 	helpMenu = new QMenu(tr("&Help"), this);

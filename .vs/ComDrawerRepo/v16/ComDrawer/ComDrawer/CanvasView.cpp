@@ -10,7 +10,10 @@ CanvasView::CanvasView(QWidget* parent)
     setAttribute(Qt::WA_StaticContents);
     isDrawing = false;
     pencilWidth = 1;
+    eraserWidth = 1;
     pencilColor = Qt::gray;
+    eraserColor = Qt::white;
+    
     workingTool = pencil;
 
 }
@@ -34,6 +37,7 @@ void CanvasView::mousePressEvent(QMouseEvent* event)
     {
         lastKnownPoint = event->pos();
         isDrawing = true;
+       
     }
 }
 
@@ -99,9 +103,25 @@ void CanvasView::resizeEvent(QResizeEvent* event)
 void CanvasView::drawLineTo(const QPoint& endPoint)
 {
     QPainter painter(&image);
-    painter.setPen(QPen(pencilColor, pencilWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    QColor drawingColor;
+    int drawingWidth = 0;
+    switch (workingTool)
+    {
+    case pencil:
+        drawingColor = pencilColor;
+        drawingWidth = pencilWidth;
+        break;
+    case eraser:
+        drawingColor = eraserColor;
+        drawingWidth = eraserWidth;
+        break;
+    default:
+        break;
+    }
+
+    painter.setPen(QPen(drawingColor, drawingWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawLine(lastKnownPoint, endPoint);
-    int rad = (pencilWidth / 2) + 2;
+    int rad = (drawingWidth / 2) + 2;
     update(QRect(lastKnownPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
     lastKnownPoint = endPoint;
 }
@@ -137,6 +157,9 @@ void CanvasView::setWorkingToolSelection(int selection)
     {
     case 0:
         workingTool = pencil;
+        break;
+    case 2:
+        workingTool = eraser;
         break;
     default:
         break;

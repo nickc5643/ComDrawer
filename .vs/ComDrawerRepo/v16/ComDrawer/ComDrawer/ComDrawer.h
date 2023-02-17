@@ -32,9 +32,8 @@ protected:
 
 private slots:
 	void about();
-
-private:
 	void selectDesignTool(int selection);
+private:	
 	CanvasView* canvasView;
 	void createActions();
 	void createMenus();
@@ -48,5 +47,6 @@ private:
 	QAction* open;
 	QAction *aboutAct;
 	QAction* pencil;
+	QAction* eraser;
 	QList<QAction*> toolOptions;
 };

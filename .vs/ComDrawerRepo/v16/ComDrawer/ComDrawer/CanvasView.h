@@ -31,13 +31,19 @@ protected:
 private:
 	enum drawingTool
 	{
-		pencil = 0
+		pencil = 0,
+		paint = 1,
+		eraser = 2,
+		fillCan = 3
 	};
 	void drawLineTo(const QPoint& endPoint);
 	void resizeImage(QImage* image, const QSize& newSize);
 	int pencilWidth;
+	int eraserWidth;
 	bool isDrawing;
 	QColor pencilColor;
+	QColor eraserColor;
+
 	QImage image;
 	QPoint lastKnownPoint;
 	drawingTool workingTool;
