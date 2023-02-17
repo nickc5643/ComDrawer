@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_ComDrawer_t {
-    QByteArrayData data[1];
-    char stringdata0[10];
+    QByteArrayData data[5];
+    char stringdata0[44];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -32,10 +32,15 @@ struct qt_meta_stringdata_ComDrawer_t {
     )
 static const qt_meta_stringdata_ComDrawer_t qt_meta_stringdata_ComDrawer = {
     {
-QT_MOC_LITERAL(0, 0, 9) // "ComDrawer"
+QT_MOC_LITERAL(0, 0, 9), // "ComDrawer"
+QT_MOC_LITERAL(1, 10, 5), // "about"
+QT_MOC_LITERAL(2, 16, 0), // ""
+QT_MOC_LITERAL(3, 17, 16), // "selectDesignTool"
+QT_MOC_LITERAL(4, 34, 9) // "selection"
 
     },
-    "ComDrawer"
+    "ComDrawer\0about\0\0selectDesignTool\0"
+    "selection"
 };
 #undef QT_MOC_LITERAL
 
@@ -45,26 +50,39 @@ static const uint qt_meta_data_ComDrawer[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-       0,    0, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
        0,       // signalCount
 
+ // slots: name, argc, parameters, tag, flags
+       1,    0,   24,    2, 0x08 /* Private */,
+       3,    1,   25,    2, 0x08 /* Private */,
+
+ // slots: parameters
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    4,
+
        0        // eod
 };
 
 void ComDrawer::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
-    (void)_o;
-    (void)_id;
-    (void)_c;
-    (void)_a;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        auto *_t = static_cast<ComDrawer *>(_o);
+        (void)_t;
+        switch (_id) {
+        case 0: _t->about(); break;
+        case 1: _t->selectDesignTool((*reinterpret_cast< int(*)>(_a[1]))); break;
+        default: ;
+        }
+    }
 }
 
 QT_INIT_METAOBJECT const QMetaObject ComDrawer::staticMetaObject = { {
-    QMetaObject::SuperData::link<QWidget::staticMetaObject>(),
+    QMetaObject::SuperData::link<QMainWindow::staticMetaObject>(),
     qt_meta_stringdata_ComDrawer.data,
     qt_meta_data_ComDrawer,
     qt_static_metacall,
@@ -83,12 +101,23 @@ void *ComDrawer::qt_metacast(const char *_clname)
     if (!_clname) return nullptr;
     if (!strcmp(_clname, qt_meta_stringdata_ComDrawer.stringdata0))
         return static_cast<void*>(this);
-    return QWidget::qt_metacast(_clname);
+    return QMainWindow::qt_metacast(_clname);
 }
 
 int ComDrawer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 {
-    _id = QWidget::qt_metacall(_c, _id, _a);
+    _id = QMainWindow::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 2)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 2;
+    } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 2)
+            *reinterpret_cast<int*>(_a[0]) = -1;
+        _id -= 2;
+    }
     return _id;
 }
 QT_WARNING_POP

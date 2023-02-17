@@ -23,7 +23,7 @@ public:
     {
         if (ComDrawerClass->objectName().isEmpty())
             ComDrawerClass->setObjectName(QString::fromUtf8("ComDrawerClass"));
-        ComDrawerClass->resize(600, 400);
+        ComDrawerClass->resize(938, 574);
 
         retranslateUi(ComDrawerClass);
 
