@@ -4,6 +4,8 @@
 /*
   Class constructor
 */
+
+
 CanvasView::CanvasView(QWidget* parent)
     : QWidget(parent)
 {
@@ -11,9 +13,10 @@ CanvasView::CanvasView(QWidget* parent)
     isDrawing = false;
     pencilWidth = 1;
     eraserWidth = 1;
+    paintWidth = 1;
     pencilColor = Qt::gray;
     eraserColor = Qt::white;
-    
+    paintColor = Qt::black;
     workingTool = pencil;
 
 }
@@ -26,6 +29,26 @@ void CanvasView::setPencilWidth(int width)
 {
     pencilWidth = width;
 }
+
+/*
+* Sets the pencil width.
+* @params[in] - event - mouse event.
+*/
+void CanvasView::setPaintWidth(int width)
+{
+    paintWidth = width;
+}
+
+void CanvasView::setPaintCololr(const QColor &color)
+{
+    paintColor = color;
+}
+
+void CanvasView::setEraserWidth(int width)
+{
+    eraserWidth = width;
+}
+
 
 /*
 * Handles mouse press events.
@@ -111,6 +134,10 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
         drawingColor = pencilColor;
         drawingWidth = pencilWidth;
         break;
+    case paint:
+        drawingColor = paintColor;
+        drawingWidth = paintWidth;
+        break;
     case eraser:
         drawingColor = eraserColor;
         drawingWidth = eraserWidth;
@@ -124,6 +151,11 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
     int rad = (drawingWidth / 2) + 2;
     update(QRect(lastKnownPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
     lastKnownPoint = endPoint;
+}
+
+void CanvasView::fillArea(const QPoint& endPoint)
+{
+
 }
 
 /*
@@ -158,8 +190,17 @@ void CanvasView::setWorkingToolSelection(int selection)
     case 0:
         workingTool = pencil;
         break;
+    case 1:
+        workingTool = paint;
+        break;
     case 2:
         workingTool = eraser;
+        break;
+    case 3:
+        workingTool = fillCan;
+        break;
+    case 4:
+        workingTool = straightLine;
         break;
     default:
         break;

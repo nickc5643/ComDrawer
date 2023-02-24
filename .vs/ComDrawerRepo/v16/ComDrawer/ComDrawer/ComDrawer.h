@@ -14,6 +14,8 @@
 #include <QMessageBox>
 #include <QMenuBar>
 #include <QScrollArea>
+#include <QColorDialog>
+#include <QInputDialog>
 
 /*
 * The purpose of this class is to control the main ComDrawer widget. 
@@ -32,7 +34,14 @@ protected:
 
 private slots:
 	void about();
-	void selectDesignTool(int selection);
+	void selectPencil();
+	void selectEraser();
+	void selectPaint();
+	void selectFill();
+	void selectStraightLine();
+	void setColor();
+	void setWidth();
+
 private:	
 	CanvasView* canvasView;
 	void createActions();
@@ -46,7 +55,12 @@ private:
 	QMenu* openTemplateMenu;
 	QAction* open;
 	QAction *aboutAct;
-	QAction* pencil;
-	QAction* eraser;
+	QAction* pencilAct;
+	QAction* eraserAct;
+	QAction* paintAct;
+	QAction* fillAct;
+	QAction* colorAct;
+	QAction* widthAct;
+	QAction* straightLineAct;
 	QList<QAction*> toolOptions;
 };

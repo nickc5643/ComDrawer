@@ -56,9 +56,66 @@ void ComDrawer::about()
 * Selects the design tool the user wants to use.
 * @param[in] - selection - interger that references a certain item.
 */
-void ComDrawer::selectDesignTool(int selection)
+void ComDrawer::selectPencil()
 {
-	canvasView->setWorkingToolSelection(selection);
+	canvasView->setWorkingToolSelection(0);
+}
+
+void ComDrawer::selectPaint()
+{
+	canvasView->setWorkingToolSelection(1);
+}
+
+void ComDrawer::selectEraser()
+{
+	canvasView->setWorkingToolSelection(2);
+}
+
+void ComDrawer::selectFill()
+{
+	canvasView->setWorkingToolSelection(3);
+}
+
+void ComDrawer::selectStraightLine()
+{
+	canvasView->setWorkingToolSelection(4);
+}
+
+void ComDrawer::setColor() 
+{
+	QColor newColor = QColorDialog::getColor(canvasView->penColor());
+	if (newColor.isValid())
+		canvasView->setPaintCololr(newColor);
+}
+
+void ComDrawer::setWidth()
+{
+	
+	bool ok;
+	int newWidth = 0;
+	if (canvasView->getWorkingTool() == 1)
+	{
+		newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
+			tr("Select paint width:"),
+			canvasView->penWidth(),
+			1, 50, 1, &ok);
+		if (ok)
+			canvasView->setPaintWidth(newWidth);
+	}
+	else if (canvasView->getWorkingTool() == 2)
+	{
+		newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
+			tr("Select eraser width:"),
+			canvasView->getEraserWidth(),
+			1, 50, 1, &ok);
+		if (ok)
+			canvasView->setEraserWidth(newWidth);
+	}
+	else
+	{
+		QMessageBox::about(this, tr("ComDrawer"), tr("<p> Only the paint brush and eraser can change widths.</p>"));
+	}
+
 }
 
 /*
@@ -69,12 +126,27 @@ void ComDrawer::createActions()
 {
 	aboutAct = new QAction(tr("&About"), this);
 	connect(aboutAct, SIGNAL(triggered()), SLOT(about()));
-	pencil = new QAction(tr("&Pencil"), this);
-	connect(pencil, SIGNAL(triggered()), SLOT(selectDesignTool((0))));
-	eraser = new QAction(tr("&Eraser"), this);
-	connect(eraser, SIGNAL(triggered()), SLOT(selectDesignTool((2))));
-	//toolOptions.append(pencil);
-	//toolOptions.append(eraser);
+	pencilAct = new QAction(tr("&Pencil"), this);
+	connect(pencilAct, SIGNAL(triggered()), SLOT(selectPencil()));
+	eraserAct = new QAction(tr("&Eraser"), this);
+	connect(eraserAct, SIGNAL(triggered()), SLOT(selectEraser()));
+	paintAct = new QAction(tr("&Paint Brush"), this);
+	connect(paintAct, SIGNAL(triggered()), SLOT(selectPaint()));
+	fillAct = new QAction(tr("&Fill Can"), this);
+	connect(fillAct, SIGNAL(triggered()), SLOT(selectFill()));
+	straightLineAct = new QAction(tr("&Straight Line"), this);
+	connect(straightLineAct, SIGNAL(triggered()), SLOT(selectStraightLine()));
+	colorAct = new QAction(tr("&Change Color"), this);
+	connect(colorAct, SIGNAL(triggered()), SLOT(setColor()));
+	widthAct = new QAction(tr("&Change Width"), this);
+	connect(widthAct, SIGNAL(triggered()), SLOT(setWidth()));
+	toolOptions.append(pencilAct);
+	toolOptions.append(paintAct);
+	toolOptions.append(eraserAct);
+	toolOptions.append(fillAct);
+	toolOptions.append(straightLineAct);
+	toolOptions.append(colorAct);
+	toolOptions.append(widthAct);
 }
 
 /*
@@ -84,10 +156,17 @@ void ComDrawer::createMenus()
 {
 	fileMenu = new QMenu(tr("&File"), this);
 	toolsMenu = new QMenu(tr("&Tools"), this);
-	//for (QAction* action : toolOptions)
-	//	toolsMenu->addAction(action);
-	toolsMenu->addAction(pencil);
-	toolsMenu->addAction(eraser);
+	int counter = 0;
+	for (QAction* action : toolOptions)
+	{
+		if (action == colorAct)
+		{
+			toolsMenu->addSeparator();
+		}
+		toolsMenu->addAction(action);
+	}
+		
+
 	plotMenu = new QMenu(tr("&Select Panel"), this);
 	openTemplateMenu = new QMenu(tr("&View/Edit Comic"), this);
 	helpMenu = new QMenu(tr("&Help"), this);
