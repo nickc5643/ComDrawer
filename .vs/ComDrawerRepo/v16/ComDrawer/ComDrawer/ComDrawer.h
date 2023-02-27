@@ -16,6 +16,7 @@
 #include <QScrollArea>
 #include <QColorDialog>
 #include <QInputDialog>
+#include "ComicBook.h"
 
 /*
 * The purpose of this class is to control the main ComDrawer widget. 
@@ -41,6 +42,8 @@ private slots:
 	void selectStraightLine();
 	void setColor();
 	void setWidth();
+	void clearActiveScreen();
+	void openComicBookPreview();
 
 private:	
 	CanvasView* canvasView;
@@ -62,5 +65,7 @@ private:
 	QAction* colorAct;
 	QAction* widthAct;
 	QAction* straightLineAct;
+	QAction* clearAct;
+	QAction* previewComicAct;
 	QList<QAction*> toolOptions;
 };

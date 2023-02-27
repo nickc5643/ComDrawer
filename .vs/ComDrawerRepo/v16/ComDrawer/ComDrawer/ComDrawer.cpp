@@ -12,7 +12,7 @@ ComDrawer::ComDrawer(QWidget* parent)
 	canvasView = new CanvasView();
 
 	ui.setupUi(this);
-	setWindowTitle(tr("ComDrawer"));
+	setWindowTitle(tr("ComDrawer - Canvas View"));
 	
 	
 	setCentralWidget(canvasView);
@@ -83,40 +83,24 @@ void ComDrawer::selectStraightLine()
 
 void ComDrawer::setColor() 
 {
-	QColor newColor = QColorDialog::getColor(canvasView->penColor());
-	if (newColor.isValid())
-		canvasView->setPaintCololr(newColor);
+	canvasView->setColor();	
 }
 
 void ComDrawer::setWidth()
 {
-	
-	bool ok;
-	int newWidth = 0;
-	if (canvasView->getWorkingTool() == 1)
-	{
-		newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
-			tr("Select paint width:"),
-			canvasView->penWidth(),
-			1, 50, 1, &ok);
-		if (ok)
-			canvasView->setPaintWidth(newWidth);
-	}
-	else if (canvasView->getWorkingTool() == 2)
-	{
-		newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
-			tr("Select eraser width:"),
-			canvasView->getEraserWidth(),
-			1, 50, 1, &ok);
-		if (ok)
-			canvasView->setEraserWidth(newWidth);
-	}
-	else
-	{
-		QMessageBox::about(this, tr("ComDrawer"), tr("<p> Only the paint brush and eraser can change widths.</p>"));
-	}
-
+	canvasView->setWidth();
 }
+
+void ComDrawer::clearActiveScreen()
+{
+	canvasView->clearActiveScreen();
+}
+void ComDrawer::openComicBookPreview()
+{
+	ComicBook* comicBook = new ComicBook();
+	comicBook->show();
+}
+
 
 /*
 	Creates the action commands, currenlty supports:
@@ -126,6 +110,11 @@ void ComDrawer::createActions()
 {
 	aboutAct = new QAction(tr("&About"), this);
 	connect(aboutAct, SIGNAL(triggered()), SLOT(about()));
+	clearAct = new QAction(tr("&Clear Design"), this);
+	connect(clearAct, SIGNAL(triggered()), SLOT(clearActiveScreen()));
+	previewComicAct = new QAction(tr("&Preview ComicBook"), this);
+	connect(previewComicAct, SIGNAL(triggered()), SLOT(openComicBookPreview()));
+
 	pencilAct = new QAction(tr("&Pencil"), this);
 	connect(pencilAct, SIGNAL(triggered()), SLOT(selectPencil()));
 	eraserAct = new QAction(tr("&Eraser"), this);
@@ -164,18 +153,20 @@ void ComDrawer::createMenus()
 			toolsMenu->addSeparator();
 		}
 		toolsMenu->addAction(action);
+
 	}
+	pencilAct->setChecked(true);
 		
 
-	plotMenu = new QMenu(tr("&Select Panel"), this);
-	openTemplateMenu = new QMenu(tr("&View/Edit Comic"), this);
+	plotMenu = new QMenu(tr("&Modify Panel"), this);
 	helpMenu = new QMenu(tr("&Help"), this);
 	helpMenu->addAction(aboutAct);
-
+	
 	
 	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(toolsMenu);
 	menuBar()->addMenu(plotMenu);
-	menuBar()->addMenu(openTemplateMenu);
+	menuBar()->addAction(previewComicAct);
+	menuBar()->addAction(clearAct);
 	menuBar()->addMenu(helpMenu);
 }

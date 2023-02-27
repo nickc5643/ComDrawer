@@ -11,6 +11,7 @@ CanvasView::CanvasView(QWidget* parent)
 {
     setAttribute(Qt::WA_StaticContents);
     isDrawing = false;
+    isModififed = false;
     pencilWidth = 1;
     eraserWidth = 1;
     paintWidth = 1;
@@ -21,6 +22,9 @@ CanvasView::CanvasView(QWidget* parent)
 
 }
 
+
+/****************************/
+/* Getters and Setters */
 /*
 * Sets the pencil width.
 * @params[in] - event - mouse event.
@@ -39,7 +43,7 @@ void CanvasView::setPaintWidth(int width)
     paintWidth = width;
 }
 
-void CanvasView::setPaintCololr(const QColor &color)
+void CanvasView::setPaintColor(const QColor &color)
 {
     paintColor = color;
 }
@@ -49,6 +53,56 @@ void CanvasView::setEraserWidth(int width)
     eraserWidth = width;
 }
 
+
+/* End Getters and Setters */
+/****************************/
+
+void CanvasView::setColor()
+{
+    if (workingTool == paint)
+    {
+        QColor newColor = QColorDialog::getColor(penColor());
+        if (!newColor.isValid())
+        {
+            QMessageBox::critical(this, tr("ComDrawer"), tr("<p> Selected color was not valid.</p>"));
+            return;
+        }
+        setPaintColor(newColor);
+    }
+    else
+    {
+        QMessageBox::critical(this, tr("ComDrawer"), tr("<p> Selected tool does not support color change.</p>"));
+    }
+
+}
+
+void CanvasView::setWidth()
+{
+    bool ok;
+    int newWidth = 0;
+    if (getWorkingTool() == paint)
+    {
+        newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
+            tr("Select paint width:"),
+            penWidth(),
+            1, 50, 1, &ok);
+        if (ok)
+            setPaintWidth(newWidth);
+    }
+    else if (getWorkingTool() == eraser)
+    {
+        newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
+            tr("Select eraser width:"),
+            getEraserWidth(),
+            1, 50, 1, &ok);
+        if (ok)
+            setEraserWidth(newWidth);
+    }
+    else
+    {
+        QMessageBox::critical(this, tr("ComDrawer"), tr("<p> Only the paint brush and eraser can change widths.</p>"));
+    }
+}
 
 /*
 * Handles mouse press events.
@@ -151,6 +205,11 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
     int rad = (drawingWidth / 2) + 2;
     update(QRect(lastKnownPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
     lastKnownPoint = endPoint;
+
+    if (!isModififed)
+    {
+        isModififed = true;
+    }
 }
 
 void CanvasView::fillArea(const QPoint& endPoint)
@@ -206,6 +265,26 @@ void CanvasView::setWorkingToolSelection(int selection)
         break;
     }
   
+}
+
+void CanvasView::clearActiveScreen()
+{
+    if (!isModififed)
+    {
+        QMessageBox::critical(this, tr("ComDrawer"), tr("<p>There is nothing to clear.</p>"));
+        return;
+    }
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Test", "Are you sure you want to clear the entire design?",
+        QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes)
+    {
+        image.fill(qRgb(255, 255, 255));
+        update();
+        isModififed = false;
+    }
+
 }
 
 /*
