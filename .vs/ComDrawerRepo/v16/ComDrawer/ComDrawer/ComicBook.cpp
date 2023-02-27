@@ -25,13 +25,18 @@ void ComicBook::pageSelect()
 {
 }
 
+void ComicBook::addPage() 
+{
+
+}
+
 void ComicBook::createActions()
 {
 	refreshAct = new QAction(tr("&Refresh Preview"), this);
 	connect(refreshAct, SIGNAL(triggered()), SLOT(refresh()));
 
 	addPageAct = new QAction(tr("&Add Page"), this);
-	connect(addPageAct, SIGNAL(triggered()), SLOT(refresh()));
+	connect(addPageAct, SIGNAL(triggered()), SLOT(addPage()));
 
 	for (int i = 0; i < defaultPages; i++)
 	{
@@ -61,5 +66,6 @@ void ComicBook::createMenus()
 		pageSelectMenu->addAction(action);
 	}
 	menuBar()->addAction(refreshAct);
+	menuBar()->addAction(addPageAct);
 	menuBar()->addMenu(pageSelectMenu);
 }
