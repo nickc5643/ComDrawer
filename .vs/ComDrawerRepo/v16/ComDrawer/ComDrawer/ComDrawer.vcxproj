@@ -31,7 +31,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.4.2_mingw_64</QtInstall>
+    <QtInstall>5.15.12_msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
@@ -88,10 +88,15 @@
     <QtMoc Include="ComDrawer.h" />
     <ClCompile Include="CanvasView.cpp" />
     <ClCompile Include="ComDrawer.cpp" />
+    <ClCompile Include="ComicBook.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="ComicBook.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CanvasView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ComicBook.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
