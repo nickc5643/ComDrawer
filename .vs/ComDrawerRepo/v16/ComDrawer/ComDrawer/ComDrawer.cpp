@@ -158,15 +158,16 @@ void ComDrawer::createMenus()
 	pencilAct->setChecked(true);
 		
 
-	plotMenu = new QMenu(tr("&Modify Panel"), this);
+	plotMenu = new QMenu(tr("&Select Panel"), this);
 	helpMenu = new QMenu(tr("&Help"), this);
 	helpMenu->addAction(aboutAct);
-	
+	elements = new QMenu(tr("&Elements"), this);
 	
 	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(toolsMenu);
 	menuBar()->addMenu(plotMenu);
 	menuBar()->addAction(previewComicAct);
 	menuBar()->addAction(clearAct);
+	menuBar()->addMenu(elements);
 	menuBar()->addMenu(helpMenu);
 }

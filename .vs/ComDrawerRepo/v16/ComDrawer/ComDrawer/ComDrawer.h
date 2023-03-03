@@ -56,6 +56,7 @@ private:
 	QMenu* helpMenu;
 	QMenu* plotMenu;
 	QMenu* openTemplateMenu;
+	QMenu* elements;
 	QAction* open;
 	QAction *aboutAct;
 	QAction* pencilAct;

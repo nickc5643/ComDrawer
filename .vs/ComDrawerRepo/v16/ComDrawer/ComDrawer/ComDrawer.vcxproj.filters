@@ -43,10 +43,21 @@
     <ClCompile Include="CanvasView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ComicBook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CanvasView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ComicBook.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="ComicBook.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
 </Project>
