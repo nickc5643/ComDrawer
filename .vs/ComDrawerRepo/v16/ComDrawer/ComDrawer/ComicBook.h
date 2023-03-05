@@ -34,6 +34,7 @@ protected:
 private slots:
     void refresh();
     void addPage();
+    void removePage();
     void pageSelect();
 
 private:
@@ -43,6 +44,7 @@ private:
     QAction* refreshAct;
     QList<QAction*> pagesAct;
     QAction* addPageAct;
+    QAction* removePageAct;
     QMenu* pageSelectMenu;
     Ui::ComicBook ui;
     QWidget* comicBookArea;
