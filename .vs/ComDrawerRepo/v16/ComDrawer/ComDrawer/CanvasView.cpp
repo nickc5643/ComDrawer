@@ -4,8 +4,6 @@
 /*
   Class constructor
 */
-
-
 CanvasView::CanvasView(QWidget* parent)
     : QWidget(parent)
 {
@@ -27,7 +25,7 @@ CanvasView::CanvasView(QWidget* parent)
 /* Getters and Setters */
 /*
 * Sets the pencil width.
-* @params[in] - event - mouse event.
+* @params[in] - width - integer size.
 */
 void CanvasView::setPencilWidth(int width)
 {
@@ -35,19 +33,27 @@ void CanvasView::setPencilWidth(int width)
 }
 
 /*
-* Sets the pencil width.
-* @params[in] - event - mouse event.
+* Sets the paintbrush width.
+* @params[in] - width - integer size.
 */
 void CanvasView::setPaintWidth(int width)
 {
     paintWidth = width;
 }
 
+/*
+* Sets the paintbrush color.
+* @params[in] - color - QColor to change brush to
+*/
 void CanvasView::setPaintColor(const QColor &color)
 {
     paintColor = color;
 }
 
+/*
+* Sets the eraser width.
+* @params[in] - width - integer size.
+*/
 void CanvasView::setEraserWidth(int width)
 {
     eraserWidth = width;
@@ -57,6 +63,9 @@ void CanvasView::setEraserWidth(int width)
 /* End Getters and Setters */
 /****************************/
 
+/*
+* Sets the color for the correct tool.
+*/
 void CanvasView::setColor()
 {
     if (workingTool == paint)
@@ -76,6 +85,9 @@ void CanvasView::setColor()
 
 }
 
+/*
+* Sets the width for the correct tool.
+*/
 void CanvasView::setWidth()
 {
     bool ok;
@@ -212,6 +224,9 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
     }
 }
 
+/*
+* Does nothing at the moment.
+*/
 void CanvasView::fillArea(const QPoint& endPoint)
 {
 
@@ -267,6 +282,9 @@ void CanvasView::setWorkingToolSelection(int selection)
   
 }
 
+/**
+* Clears the active screen if there is something to clear.
+*/
 void CanvasView::clearActiveScreen()
 {
     if (!isModififed)

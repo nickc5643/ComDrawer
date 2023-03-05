@@ -1,5 +1,8 @@
 #include "ComicBook.h"
 
+/*
+* Class constructor.
+*/
 ComicBook::ComicBook(QWidget* parent)
 {
 	createActions();
@@ -11,25 +14,48 @@ ComicBook::ComicBook(QWidget* parent)
 	resize(500, 500);
 }
 
+/*
+* Class Destructor.
+*/
 ComicBook::~ComicBook()
 {
 	delete refreshAct;
 	delete pageSelectMenu;
 }
 
+/*
+* Refreshes the screen. Currently does nothing.
+*/
 void ComicBook::refresh()
 {
 }
 
+/*
+* Selects the page. Currently does nothing.
+*/
 void ComicBook::pageSelect()
 {
 }
 
+/*
+* Adds the page. Currently does nothing.
+*/
 void ComicBook::addPage() 
 {
 
 }
 
+/*
+* Removes the page. Currently does nothing.
+*/
+void ComicBook::removePage()
+{
+
+}
+
+/*
+* Create the actions for the ComicBook Window.
+*/
 void ComicBook::createActions()
 {
 	refreshAct = new QAction(tr("&Refresh Preview"), this);
@@ -38,6 +64,9 @@ void ComicBook::createActions()
 	addPageAct = new QAction(tr("&Add Page"), this);
 	connect(addPageAct, SIGNAL(triggered()), SLOT(addPage()));
 
+	removePageAct = new QAction(tr("&Remove Page"), this);
+	connect(removePageAct, SIGNAL(triggered()), SLOT(addPage()));
+
 	for (int i = 0; i < defaultPages; i++)
 	{
 		QAction* tempAct;
@@ -45,7 +74,7 @@ void ComicBook::createActions()
 		{
 			tempAct  = new QAction(tr("&Cover Page"), this);
 		}
-		else if (i == maxPages - 1)
+		else if (i == defaultPages - 1)
 		{
 			tempAct = new QAction(tr("&Back Page"), this);
 		}
@@ -58,6 +87,9 @@ void ComicBook::createActions()
 	}
 }
 
+/*
+* Create the menu for the comicbook window. 
+*/
 void ComicBook::createMenus()
 {
 	pageSelectMenu = new QMenu(tr("&Select Page"), this);
@@ -67,5 +99,6 @@ void ComicBook::createMenus()
 	}
 	menuBar()->addAction(refreshAct);
 	menuBar()->addAction(addPageAct);
+	menuBar()->addAction(removePageAct);
 	menuBar()->addMenu(pageSelectMenu);
 }

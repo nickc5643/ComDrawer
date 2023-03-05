@@ -29,7 +29,6 @@ ComDrawer::~ComDrawer()
 	delete fileMenu;
 	delete toolsMenu;
 	delete plotMenu;
-	delete openTemplateMenu;
 	delete helpMenu;
 	delete aboutAct;
 	delete canvasView;
@@ -53,48 +52,72 @@ void ComDrawer::about()
 }
 
 /*
-* Selects the design tool the user wants to use.
-* @param[in] - selection - interger that references a certain item.
+* Selects the pencil tool.
 */
 void ComDrawer::selectPencil()
 {
 	canvasView->setWorkingToolSelection(0);
 }
 
+/*
+* Selects the paint tool.
+*/
 void ComDrawer::selectPaint()
 {
 	canvasView->setWorkingToolSelection(1);
 }
 
+/*
+* Selects the eraser tool.
+*/
 void ComDrawer::selectEraser()
 {
 	canvasView->setWorkingToolSelection(2);
 }
 
+/*
+* Selects the fill can tool.
+*/
 void ComDrawer::selectFill()
 {
 	canvasView->setWorkingToolSelection(3);
 }
 
+/*
+* Selects the stright line tool.
+*/
 void ComDrawer::selectStraightLine()
 {
 	canvasView->setWorkingToolSelection(4);
 }
 
+/*
+* Calls canvasView's setColor.
+*/
 void ComDrawer::setColor() 
 {
 	canvasView->setColor();	
 }
 
+/*
+* Calls canvasView's setWidth.
+*/
 void ComDrawer::setWidth()
 {
 	canvasView->setWidth();
 }
 
+/*
+* Calls canvasView's clearActiveScreen.
+*/
 void ComDrawer::clearActiveScreen()
 {
 	canvasView->clearActiveScreen();
 }
+
+/*
+* Creates the comicbook window.
+*/
 void ComDrawer::openComicBookPreview()
 {
 	ComicBook* comicBook = new ComicBook();
@@ -126,8 +149,10 @@ void ComDrawer::createActions()
 	straightLineAct = new QAction(tr("&Straight Line"), this);
 	connect(straightLineAct, SIGNAL(triggered()), SLOT(selectStraightLine()));
 	colorAct = new QAction(tr("&Change Color"), this);
+	colorAct->setShortcut(tr("ctrl+f"));
 	connect(colorAct, SIGNAL(triggered()), SLOT(setColor()));
 	widthAct = new QAction(tr("&Change Width"), this);
+	widthAct->setShortcut(tr("ctrl+d"));
 	connect(widthAct, SIGNAL(triggered()), SLOT(setWidth()));
 	toolOptions.append(pencilAct);
 	toolOptions.append(paintAct);
@@ -158,7 +183,7 @@ void ComDrawer::createMenus()
 	pencilAct->setChecked(true);
 		
 
-	plotMenu = new QMenu(tr("&Modify Panel"), this);
+	plotMenu = new QMenu(tr("&Set Panel"), this);
 	helpMenu = new QMenu(tr("&Help"), this);
 	helpMenu->addAction(aboutAct);
 	
