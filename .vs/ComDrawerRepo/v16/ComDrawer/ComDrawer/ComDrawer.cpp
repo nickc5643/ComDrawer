@@ -12,7 +12,7 @@ ComDrawer::ComDrawer(QWidget* parent)
 	canvasView = new CanvasView();
 
 	ui.setupUi(this);
-	setWindowTitle(tr("ComDrawer - Canvas View"));
+	setWindowTitle(tr("ComDrawer"));
 	
 	
 	setCentralWidget(canvasView);
@@ -29,6 +29,7 @@ ComDrawer::~ComDrawer()
 	delete fileMenu;
 	delete toolsMenu;
 	delete plotMenu;
+	delete openTemplateMenu;
 	delete helpMenu;
 	delete aboutAct;
 	delete canvasView;
@@ -52,78 +53,13 @@ void ComDrawer::about()
 }
 
 /*
-* Selects the pencil tool.
+* Selects the design tool the user wants to use.
+* @param[in] - selection - interger that references a certain item.
 */
-void ComDrawer::selectPencil()
+void ComDrawer::selectDesignTool(int selection)
 {
-	canvasView->setWorkingToolSelection(0);
+	canvasView->setWorkingToolSelection(selection);
 }
-
-/*
-* Selects the paint tool.
-*/
-void ComDrawer::selectPaint()
-{
-	canvasView->setWorkingToolSelection(1);
-}
-
-/*
-* Selects the eraser tool.
-*/
-void ComDrawer::selectEraser()
-{
-	canvasView->setWorkingToolSelection(2);
-}
-
-/*
-* Selects the fill can tool.
-*/
-void ComDrawer::selectFill()
-{
-	canvasView->setWorkingToolSelection(3);
-}
-
-/*
-* Selects the stright line tool.
-*/
-void ComDrawer::selectStraightLine()
-{
-	canvasView->setWorkingToolSelection(4);
-}
-
-/*
-* Calls canvasView's setColor.
-*/
-void ComDrawer::setColor() 
-{
-	canvasView->setColor();	
-}
-
-/*
-* Calls canvasView's setWidth.
-*/
-void ComDrawer::setWidth()
-{
-	canvasView->setWidth();
-}
-
-/*
-* Calls canvasView's clearActiveScreen.
-*/
-void ComDrawer::clearActiveScreen()
-{
-	canvasView->clearActiveScreen();
-}
-
-/*
-* Creates the comicbook window.
-*/
-void ComDrawer::openComicBookPreview()
-{
-	ComicBook* comicBook = new ComicBook();
-	comicBook->show();
-}
-
 
 /*
 	Creates the action commands, currenlty supports:
@@ -133,34 +69,9 @@ void ComDrawer::createActions()
 {
 	aboutAct = new QAction(tr("&About"), this);
 	connect(aboutAct, SIGNAL(triggered()), SLOT(about()));
-	clearAct = new QAction(tr("&Clear Design"), this);
-	connect(clearAct, SIGNAL(triggered()), SLOT(clearActiveScreen()));
-	previewComicAct = new QAction(tr("&Preview ComicBook"), this);
-	connect(previewComicAct, SIGNAL(triggered()), SLOT(openComicBookPreview()));
-
-	pencilAct = new QAction(tr("&Pencil"), this);
-	connect(pencilAct, SIGNAL(triggered()), SLOT(selectPencil()));
-	eraserAct = new QAction(tr("&Eraser"), this);
-	connect(eraserAct, SIGNAL(triggered()), SLOT(selectEraser()));
-	paintAct = new QAction(tr("&Paint Brush"), this);
-	connect(paintAct, SIGNAL(triggered()), SLOT(selectPaint()));
-	fillAct = new QAction(tr("&Fill Can"), this);
-	connect(fillAct, SIGNAL(triggered()), SLOT(selectFill()));
-	straightLineAct = new QAction(tr("&Straight Line"), this);
-	connect(straightLineAct, SIGNAL(triggered()), SLOT(selectStraightLine()));
-	colorAct = new QAction(tr("&Change Color"), this);
-	colorAct->setShortcut(tr("ctrl+f"));
-	connect(colorAct, SIGNAL(triggered()), SLOT(setColor()));
-	widthAct = new QAction(tr("&Change Width"), this);
-	widthAct->setShortcut(tr("ctrl+d"));
-	connect(widthAct, SIGNAL(triggered()), SLOT(setWidth()));
-	toolOptions.append(pencilAct);
-	toolOptions.append(paintAct);
-	toolOptions.append(eraserAct);
-	toolOptions.append(fillAct);
-	toolOptions.append(straightLineAct);
-	toolOptions.append(colorAct);
-	toolOptions.append(widthAct);
+	pencil = new QAction(tr("&Pencil"), this);
+	connect(aboutAct, SIGNAL(triggered()), SLOT(selectDesignTool((0))));
+	toolOptions.append(pencil);
 }
 
 /*
@@ -170,28 +81,18 @@ void ComDrawer::createMenus()
 {
 	fileMenu = new QMenu(tr("&File"), this);
 	toolsMenu = new QMenu(tr("&Tools"), this);
-	int counter = 0;
-	for (QAction* action : toolOptions)
-	{
-		if (action == colorAct)
-		{
-			toolsMenu->addSeparator();
-		}
+	for (QAction* action : std::as_const(toolOptions))
 		toolsMenu->addAction(action);
 
-	}
-	pencilAct->setChecked(true);
-		
-
-	plotMenu = new QMenu(tr("&Set Panel"), this);
+	plotMenu = new QMenu(tr("&Select Panel"), this);
+	openTemplateMenu = new QMenu(tr("&View/Edit Comic"), this);
 	helpMenu = new QMenu(tr("&Help"), this);
 	helpMenu->addAction(aboutAct);
-	
+
 	
 	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(toolsMenu);
 	menuBar()->addMenu(plotMenu);
-	menuBar()->addAction(previewComicAct);
-	menuBar()->addAction(clearAct);
+	menuBar()->addMenu(openTemplateMenu);
 	menuBar()->addMenu(helpMenu);
 }

@@ -1,2 +1,12 @@
-﻿  ComDrawer.cpp
-  ComDrawer.vcxproj -> A:\GraduateSchool\Final Project\ComDrawerRepo\.vs\ComDrawerRepo\v16\ComDrawer\x64\Debug\ComDrawer.exe
+﻿  Reading Qt configuration (C:/Qt/5.15.12/msvc2019_64/bin/qmake)
+  uic ComDrawer.ui
+  rcc ComDrawer.qrc
+  moc ComDrawer.h
+   RCC: Warning: No resources in 'A:\GraduateSchool\Final Project\ComDrawerRepo\.vs\ComDrawerRepo\v16\ComDrawer\ComDrawer\ComDrawer.qrc'.
+  ComDrawer.cpp
+  main.cpp
+  qrc_ComDrawer.cpp
+  moc_ComDrawer.cpp
+ComDrawer.obj : error LNK2019: unresolved external symbol "public: __cdecl CanvasView::CanvasView(class QWidget *)" (??0CanvasView@@QEAA@PEAVQWidget@@@Z) referenced in function "public: __cdecl ComDrawer::ComDrawer(class QWidget *)" (??0ComDrawer@@QEAA@PEAVQWidget@@@Z)
+ComDrawer.obj : error LNK2019: unresolved external symbol "public: void __cdecl CanvasView::setWorkingToolSelection(int)" (?setWorkingToolSelection@CanvasView@@QEAAXH@Z) referenced in function "private: void __cdecl ComDrawer::selectDesignTool(int)" (?selectDesignTool@ComDrawer@@AEAAXH@Z)
+A:\GraduateSchool\Final Project\ComDrawerRepo\.vs\ComDrawerRepo\v16\ComDrawer\x64\Debug\ComDrawer.exe : fatal error LNK1120: 2 unresolved externals
