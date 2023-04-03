@@ -16,6 +16,7 @@
 #include <QScrollArea>
 #include <QColorDialog>
 #include <QInputDialog>
+#include <QGridLayout>
 
 /*
 * The purpose of this class is to control the main ComDrawer widget.
@@ -43,8 +44,9 @@ private slots:
 private:
     void createActions();
     void createMenus();
-    void readTextFile();
+    void readTextFile(const char& comic_title);
     void uploadImage(int panel, std::string filename);
+    void setPageNumber(int newPage);
 
     QAction* refreshAct;
     QList<QAction*> pagesAct;

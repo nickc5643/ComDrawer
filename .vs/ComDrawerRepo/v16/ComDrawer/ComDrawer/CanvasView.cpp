@@ -318,8 +318,8 @@ CanvasView::~CanvasView()
 void CanvasView::writeToFile(const QString& fileName, int panelId)
 {
     std::ofstream myfile;
-    myfile.open("example.txt");
-    myfile << "panelId=" << panelId << " " << fileName.toStdString() + ".tiff" + "\n";
+    myfile.open("example.txt", std::ios_base::app);
+    myfile << "panelId=" << panelId << " " << fileName.toStdString() + "\n";
     myfile.close();
 }
 bool CanvasView::validatePanel(int id)
@@ -349,10 +349,16 @@ bool CanvasView::setPanel()
     }
     if (status)
     {
-        QString initPath = QDir::currentPath() + "/untilted.tiff";
-        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath);
-        savePanel(filename);
+        QString initPath = QDir::currentPath() + "/untilted";
+        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath, tr("%1 Files (*%2);;")
+            .arg(QString::fromLatin1(".PNG"))
+            .arg(QString::fromLatin1(".png")));
+        status = savePanel(filename);
        
+       
+    }
+    if (status)
+    {
         writeToFile(filename, panelId);
     }
     return true;
@@ -363,7 +369,7 @@ bool CanvasView::savePanel(const QString& fileName)
     QImage panelImage = image;
     resizeImage(&panelImage, size());
 
-    if (panelImage.save(fileName, ".tiff"))
+    if (panelImage.save(fileName))
     {
         isModififed = false;
         return true;

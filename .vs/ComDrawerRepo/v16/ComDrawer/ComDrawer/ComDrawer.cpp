@@ -122,6 +122,7 @@ void ComDrawer::clearActiveScreen()
 void ComDrawer::openComicBookPreview()
 {
 	canvasView->setMaxPanel(comicBook->getPanelCount());
+	comicBook->refresh();
 	comicBook->show();
 }
 

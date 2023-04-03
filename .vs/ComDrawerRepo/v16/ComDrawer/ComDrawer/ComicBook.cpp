@@ -12,7 +12,14 @@ ComicBook::ComicBook(QWidget* parent)
 	currentPage = 0;
 	refreshPage = false;
 	comicBookArea = new QWidget();
-	setCentralWidget(comicBookArea);
+	//QLabel* imageLabel = new QLabel();
+
+	//QImage image("C:/Projects/Final_Project/ComDrawer/.vs/ComDrawerRepo/v16/ComDrawer/ComDrawer/test/Test_Image.png");
+	//imageLabel->setPixmap(QPixmap::fromImage(image));
+	//QScrollArea* scrollArea = new QScrollArea;
+	//scrollArea->setWidget(imageLabel);
+	//setCentralWidget(scrollArea);
+	readTextFile('0');
 	maxPanelCount = ((pageCount - 2) * 6) + 2;
 	resize(500, 500);
 }
@@ -22,7 +29,6 @@ ComicBook::ComicBook(QWidget* parent)
 */
 ComicBook::~ComicBook()
 {
-	delete refreshAct;
 	delete pageSelectMenu;
 }
 
@@ -31,6 +37,17 @@ ComicBook::~ComicBook()
 */
 void ComicBook::refresh()
 {
+	/*QLayoutItem* item = comicBookArea->layout()->itemAt(0);
+	if (item)
+	{
+		comicBookArea->layout()->removeItem(item);
+		QWidget* widget = item->widget();
+		if (widget)
+		{
+			delete widget;
+		}
+	}*/
+	readTextFile('0');
 }
 
 /*
@@ -38,6 +55,16 @@ void ComicBook::refresh()
 */
 void ComicBook::pageSelect()
 {
+	bool status = false;
+	int page = QInputDialog::getInt(this, tr("ComDrawer"),
+		tr("Enter a page number 0 - " + backPage),
+		currentPage,
+		coverPage, backPage, currentPage, &status);
+	if (status)
+	{
+		setPageNumber(page);
+		refresh();
+	}
 }
 
 /*
@@ -46,6 +73,7 @@ void ComicBook::pageSelect()
 void ComicBook::addPage() 
 {
 	pageCount++;
+	backPage++;
 }
 
 /*
@@ -53,7 +81,8 @@ void ComicBook::addPage()
 */
 void ComicBook::removePage()
 {
-	pageCount--;
+	pageCount--; 
+	backPage--;
 }
 
 int ComicBook::getPanelCount()
@@ -107,7 +136,7 @@ void ComicBook::createMenus()
 	menuBar()->addMenu(pageSelectMenu);
 }
 
-void ComicBook::readTextFile()
+void ComicBook::readTextFile(const char& comic_title)
 {
 	int panelValues = 0;
 	int multipanel = 0;
@@ -141,19 +170,20 @@ void ComicBook::readTextFile()
 		{
 			panelId = (panelValues - count--);
 			if (panelId <= panelValues)
-				search = "panelId=" + panelId;
+				search = "panelId=" + std::to_string(panelId);
 			else
 				break;
 		}
 		else
 		{
 			panelId = panelValues;
-			search = "panelId=" + panelId;
+			search = "panelId=" + std::to_string(panelId);;
 		}
 
 		std::string temp = "";
 		getline(fin, temp);
-		if (temp.find(search))
+		auto t = temp.find(search) != std::string::npos;
+		if (t)
 		{
 			std::string filename = temp.substr(search.size() + 1, temp.size() - 1);
 			uploadImage(panelId, filename);
@@ -171,5 +201,61 @@ void ComicBook::readTextFile()
 
 void ComicBook::uploadImage(int panel, std::string filename)
 {
-	//do nothing
+	QLabel* imageLabel = new QLabel();
+	QImage image(filename.c_str());
+	imageLabel->setPixmap(QPixmap::fromImage(image));
+	QGridLayout* page = new QGridLayout();
+	if (panel == coverPage)
+	{
+		page->addWidget(imageLabel, 0, 0, 3, 2);
+	}
+	else if (panel == backPage)
+	{
+		page->addWidget(imageLabel, 0, 0, 3, 2);
+	}
+	else
+	{
+		int panelKey = panel;
+		if (panel > 6)
+		{
+			panelKey = (panel - 1) / 6;
+		}
+		
+ 		if (panelKey == 1)
+		{
+			page->addWidget(imageLabel, 0, 0, 1, 1);
+		}
+		else if (panelKey == 2)
+		{
+			page->addWidget(imageLabel, 0, 1, 1, 1);
+		}
+		else if (panelKey == 3)
+		{
+			page->addWidget(imageLabel, 1, 0, 1, 1);
+		}
+		else if (panelKey == 4)
+		{
+			page->addWidget(imageLabel, 1, 1, 1, 1);
+		}
+		else if (panelKey == 5)
+		{
+			page->addWidget(imageLabel, 2, 0, 1, 1);
+		}
+		else if (panelKey == 6)
+		{
+			page->addWidget(imageLabel, 2, 1, 1, 1);
+		}
+
+	}
+
+	
+	QScrollArea* scrollArea = new QScrollArea;
+	scrollArea->setWidget(imageLabel);
+	comicBookArea->setLayout(page);
+	setCentralWidget(comicBookArea);
+}
+
+void ComicBook::setPageNumber(int newPage)
+{
+	currentPage = newPage;
 }
