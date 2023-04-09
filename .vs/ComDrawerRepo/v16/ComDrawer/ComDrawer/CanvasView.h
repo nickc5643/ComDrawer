@@ -41,8 +41,12 @@ public:
 	void setColor();
 	void setWidth();
 	void clearActiveScreen();
-	bool setPanel();
+	bool setPanel(std::string comicBookConfigFile);
 	void setMaxPanel(int newMaxPanel);
+	bool saveMyPanel();
+	QString saveAs();
+	bool openPanel();
+	
 
 protected:
 	void mousePressEvent(QMouseEvent* event) override;
@@ -58,7 +62,7 @@ private:
 	void drawLineTo(const QPoint& endPoint);
 	void fillArea(const QPoint& endPoint);
 	void resizeImage(QImage* image, const QSize& newSize);
-	
+	bool openImage(const QString& fileName);
 
 	int pencilWidth;
 	int eraserWidth;
@@ -72,9 +76,11 @@ private:
 	QPoint lastKnownPoint;
 	drawingTool workingTool;
 	bool savePanel(const QString& fileName);
-	void writeToFile(const QString& fileName, int panelId);
+	void writeToFile(const QString& fileName, int panelId, std::string comicBookConfigFile);
 	bool validatePanel(int id);
 	int maxPanel;
+	bool checkExists(int panelId);
+	QString _panelName;
 
 };
 

@@ -17,6 +17,17 @@
 #include <QColorDialog>
 #include <QInputDialog>
 #include <QGridLayout>
+#include <Windows.h>
+#include <iostream>
+#include <conio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <direct.h>
+#include <fstream>
+
+
 
 /*
 * The purpose of this class is to control the main ComDrawer widget.
@@ -32,6 +43,10 @@ public:
     int getPanelCount();
     void refresh();
     bool readFile();
+    void createComicBook();
+    void openComicBook();
+    QString getActiveComicBook();
+    std::string getActiveComicBookConfigurationFile();
 
 protected:
 
@@ -40,19 +55,20 @@ private slots:
     void addPage();
     void removePage();
     void pageSelect();
+    void downloadComicBook();
 
 private:
     void createActions();
     void createMenus();
-    void readTextFile(const char& comic_title);
-    void uploadImage(int panel, std::string filename);
+    void readTextFile(std::string comicTitle);
+    void uploadImage(int panel, std::string filename, QGridLayout* page);
     void setPageNumber(int newPage);
 
-    QAction* refreshAct;
-    QList<QAction*> pagesAct;
+    QAction* pagesAct;
     QAction* addPageAct;
     QAction* removePageAct;
-    QMenu* pageSelectMenu;
+    QAction* downloadComicAct;
+    QMenu* fileMenu;
     Ui::ComicBook ui;
     QWidget* comicBookArea;
     int maxPages = 37;
@@ -62,7 +78,7 @@ private:
     int pageCount = 5;
     int maxPanelCount;
     int backPage = 4;
-    bool refreshPage;
-
+    QString _activeComicBook;
+    std::string _activeComicBookConfigurationFile;
 };
 

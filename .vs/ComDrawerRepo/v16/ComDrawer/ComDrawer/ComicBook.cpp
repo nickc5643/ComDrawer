@@ -10,16 +10,7 @@ ComicBook::ComicBook(QWidget* parent)
 	ui.setupUi(this);
 	setWindowTitle(tr("ComDrawer - Comic Book Preview"));
 	currentPage = 0;
-	refreshPage = false;
 	comicBookArea = new QWidget();
-	//QLabel* imageLabel = new QLabel();
-
-	//QImage image("C:/Projects/Final_Project/ComDrawer/.vs/ComDrawerRepo/v16/ComDrawer/ComDrawer/test/Test_Image.png");
-	//imageLabel->setPixmap(QPixmap::fromImage(image));
-	//QScrollArea* scrollArea = new QScrollArea;
-	//scrollArea->setWidget(imageLabel);
-	//setCentralWidget(scrollArea);
-	readTextFile('0');
 	maxPanelCount = ((pageCount - 2) * 6) + 2;
 	resize(500, 500);
 }
@@ -29,7 +20,7 @@ ComicBook::ComicBook(QWidget* parent)
 */
 ComicBook::~ComicBook()
 {
-	delete pageSelectMenu;
+	delete comicBookArea;
 }
 
 /*
@@ -37,17 +28,40 @@ ComicBook::~ComicBook()
 */
 void ComicBook::refresh()
 {
-	/*QLayoutItem* item = comicBookArea->layout()->itemAt(0);
-	if (item)
+	if (comicBookArea->layout())
 	{
-		comicBookArea->layout()->removeItem(item);
-		QWidget* widget = item->widget();
-		if (widget)
+		int count = 0;
+		while (1)
 		{
-			delete widget;
+			QLayoutItem* item = comicBookArea->layout()->itemAt(count++);
+			if (item)
+			{
+				comicBookArea->layout()->removeItem(item);
+				QWidget* widget = item->widget();
+				do
+				{
+					if (widget)
+					{
+						delete widget;
+						widget = item->widget();
+					}
+					else
+					{
+						break;
+					}
+				} while (1);
+				delete item;
+			}
+			else
+			{
+				delete item;
+				delete comicBookArea->layout();
+				break;
+			}
 		}
-	}*/
-	readTextFile('0');
+		
+	}
+	readTextFile(_activeComicBookConfigurationFile);
 }
 
 /*
@@ -56,8 +70,9 @@ void ComicBook::refresh()
 void ComicBook::pageSelect()
 {
 	bool status = false;
+	std::string pageText = "Enter Page Number (0-" + std::to_string(backPage) +")";
 	int page = QInputDialog::getInt(this, tr("ComDrawer"),
-		tr("Enter a page number 0 - " + backPage),
+		pageText.c_str(),
 		currentPage,
 		coverPage, backPage, currentPage, &status);
 	if (status)
@@ -72,8 +87,12 @@ void ComicBook::pageSelect()
 */
 void ComicBook::addPage() 
 {
-	pageCount++;
-	backPage++;
+	if (pageCount < 37)
+	{
+		pageCount++;
+		backPage++;
+		maxPanelCount = ((pageCount - 2) * 6) + 2;
+	}
 }
 
 /*
@@ -81,13 +100,22 @@ void ComicBook::addPage()
 */
 void ComicBook::removePage()
 {
-	pageCount--; 
-	backPage--;
+	if (pageCount >3)
+	{
+		pageCount--;
+		backPage--;
+		maxPanelCount = ((pageCount - 2) * 6) + 2;
+	}
 }
 
 int ComicBook::getPanelCount()
 {
 	return maxPanelCount;
+}
+
+void ComicBook::downloadComicBook()
+{
+
 }
 
 /*
@@ -97,28 +125,12 @@ void ComicBook::createActions()
 {
 	addPageAct = new QAction(tr("&Add Page"), this);
 	connect(addPageAct, SIGNAL(triggered()), SLOT(addPage()));
-
 	removePageAct = new QAction(tr("&Remove Page"), this);
-	connect(removePageAct, SIGNAL(triggered()), SLOT(addPage()));
-
-	for (int i = 0; i < defaultPages; i++)
-	{
-		QAction* tempAct;
-		if (i == 0)
-		{
-			tempAct  = new QAction(tr("&Cover Page"), this);
-		}
-		else if (i == defaultPages - 1)
-		{
-			tempAct = new QAction(tr("&Back Page"), this);
-		}
-		else
-		{
-			tempAct = new QAction(QString::number(i), this);
-		}
-		connect(tempAct, SIGNAL(triggered()), SLOT(pageSelect()));
-		pagesAct.append(tempAct);
-	}
+	connect(removePageAct, SIGNAL(triggered()), SLOT(removePage()));
+	pagesAct = new QAction(tr("&Select Page"), this);
+	connect(pagesAct, SIGNAL(triggered()), SLOT(pageSelect()));
+	downloadComicAct = new QAction(tr("&Download Comic"), this);
+	connect(downloadComicAct, SIGNAL(triggered()), SLOT(downloadComicBook()));
 }
 
 /*
@@ -126,46 +138,48 @@ void ComicBook::createActions()
 */
 void ComicBook::createMenus()
 {
-	pageSelectMenu = new QMenu(tr("&Select Page"), this);
-	for (QAction* action : pagesAct)
-	{
-		pageSelectMenu->addAction(action);
-	}
+	fileMenu = new QMenu(tr("&File"), this);
+	fileMenu->addAction(downloadComicAct);
+	menuBar()->addMenu(fileMenu);
 	menuBar()->addAction(addPageAct);
 	menuBar()->addAction(removePageAct);
-	menuBar()->addMenu(pageSelectMenu);
+	menuBar()->addAction(pagesAct);
 }
 
-void ComicBook::readTextFile(const char& comic_title)
+void ComicBook::readTextFile(std::string comicTitle)
 {
+	
+
+	QGridLayout* page = new QGridLayout();
 	int panelValues = 0;
+	std::string mainPanels = "";
 	int multipanel = 0;
 	bool sixPanel = false;
+	std::ifstream fin;
+	std::string search;
+	int count = 6;
+	int panelId;
+	bool found;
 	if (currentPage == coverPage)
 	{
+		mainPanels = "cover";
 		panelValues = 0;
 	}
 	else if (currentPage == backPage)
 	{
-		panelValues = backPage;
+		mainPanels = "end";
+		panelValues = maxPanelCount;
 	}
 	else
 	{
 		panelValues = (currentPage * 6) + 1;
 		sixPanel = true;
 	}
-	std::ifstream fin;
-	fin.open("example.txt");
-	if (fin.fail())
-	{
-		return;
-	}
 
-	std::string search;
-	int count = 6;
-	int panelId;
-	while (!fin.eof())
+
+	while (count >= 0)
 	{
+		found = false;
 		if (sixPanel)
 		{
 			panelId = (panelValues - count--);
@@ -177,34 +191,49 @@ void ComicBook::readTextFile(const char& comic_title)
 		else
 		{
 			panelId = panelValues;
-			search = "panelId=" + std::to_string(panelId);;
+			search = "panelId=" + mainPanels;
 		}
-
-		std::string temp = "";
-		getline(fin, temp);
-		auto t = temp.find(search) != std::string::npos;
-		if (t)
+		fin.open(comicTitle);
+		if (fin.fail())
 		{
-			std::string filename = temp.substr(search.size() + 1, temp.size() - 1);
-			uploadImage(panelId, filename);
+			break;
 		}
-
+		
+		while (!fin.eof())
+		{
+			std::string temp = "";
+			getline(fin, temp);
+			auto t = temp.find(search) != std::string::npos;
+			
+			if (t)
+			{
+				std::string filename = temp.substr(search.size() + 1, temp.size() - 1);
+				uploadImage(panelId, filename, page);
+				found = true;
+				break;
+			}
+		}
+		fin.close();
+		if (!found)
+		{
+			std::string blankPanel = "C:/Projects/Final_Project/ComDrawer/.vs/ComDrawerRepo/v16/ComDrawer/ComDrawer/blankPanel.png";
+			uploadImage(panelId, blankPanel, page);
+		}
 		if (!sixPanel)
 		{
 			break;
 		}
 	}
-	
+
 
 		
 }
 
-void ComicBook::uploadImage(int panel, std::string filename)
+void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 {
+	QImage panelImage(filename.c_str());
 	QLabel* imageLabel = new QLabel();
-	QImage image(filename.c_str());
-	imageLabel->setPixmap(QPixmap::fromImage(image));
-	QGridLayout* page = new QGridLayout();
+	imageLabel->setPixmap(QPixmap::fromImage(panelImage));
 	if (panel == coverPage)
 	{
 		page->addWidget(imageLabel, 0, 0, 3, 2);
@@ -247,15 +276,66 @@ void ComicBook::uploadImage(int panel, std::string filename)
 		}
 
 	}
-
-	
-	QScrollArea* scrollArea = new QScrollArea;
-	scrollArea->setWidget(imageLabel);
 	comicBookArea->setLayout(page);
 	setCentralWidget(comicBookArea);
+
+
+
 }
 
 void ComicBook::setPageNumber(int newPage)
 {
 	currentPage = newPage;
+}
+
+void ComicBook::createComicBook()
+{
+	bool status;
+	QString text = QInputDialog::getText(this, tr("ComDrawer - Create Comic"), tr("Enter Comic Book name."),QLineEdit::Normal,tr(""),&status);
+	if (status && !text.isEmpty())
+	{
+		std::string dir = text.toStdString();
+		dir.erase(std::remove_if(dir.begin(), dir.end(), ::isspace), dir.end());
+		if (mkdir(dir.c_str()) == -1)
+		{
+			QMessageBox::critical(
+				this,
+				tr("ComDrawer"),
+				tr("Comic Book Creation Failed: Directory could not be created."));
+			return;
+		}
+		
+		std::ofstream fin;
+		_activeComicBook = text;
+		_activeComicBookConfigurationFile = dir + "/" + _activeComicBook.toStdString() + "_proj.txt";
+		fin.open(_activeComicBookConfigurationFile);
+
+		if (fin.fail())
+		{
+			QMessageBox::critical(
+				this,
+				tr("ComDrawer"),
+				tr("Comic Book Creation Failed: Failed to create project configuration file"));
+			return;
+		}
+		std::string comicNameHeader = "Comic Book Name:" + _activeComicBook.toStdString() + "\n";
+		std::string comicPageCount = "Comic Book Page Count:" + std::to_string(pageCount) + "\n";
+		fin.write(comicNameHeader.c_str(), comicNameHeader.size());
+		fin.write(comicPageCount.c_str(), comicPageCount.size());
+		fin.close();
+	}
+}
+
+QString ComicBook::getActiveComicBook()
+{
+	return _activeComicBook;
+}
+
+void ComicBook::openComicBook()
+{
+
+}
+std::string ComicBook::getActiveComicBookConfigurationFile()
+{
+	return _activeComicBookConfigurationFile;
 }

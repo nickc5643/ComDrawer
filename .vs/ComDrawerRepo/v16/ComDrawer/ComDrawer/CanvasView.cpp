@@ -295,7 +295,7 @@ void CanvasView::clearActiveScreen()
         return;
     }
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Test", "Are you sure you want to clear the entire design?",
+    reply = QMessageBox::question(this, "Clear Design", "Are you sure you want to clear the entire design?",
         QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes)
@@ -315,30 +315,50 @@ CanvasView::~CanvasView()
 
 }
 
-void CanvasView::writeToFile(const QString& fileName, int panelId)
+void CanvasView::writeToFile(const QString& fileName, int panelId, std::string comicBookConfigFile)
 {
+    std::string mainPanels = "";
     std::ofstream myfile;
-    myfile.open("example.txt", std::ios_base::app);
-    myfile << "panelId=" << panelId << " " << fileName.toStdString() + "\n";
+    myfile.open(comicBookConfigFile, std::ios_base::app);
+    if (panelId == 0)
+    {
+        myfile << "panelId=cover" << " " << fileName.toStdString() + "\n";
+    }
+    else if (panelId == maxPanel)
+    {
+        mainPanels = "end";
+        myfile << "panelId=end" << " " << fileName.toStdString() + "\n";
+    }
+    else
+    {
+        myfile << "panelId=" << panelId << " " << fileName.toStdString() + "\n";
+    }
     myfile.close();
 }
 bool CanvasView::validatePanel(int id)
 {
-    if (id <= maxPanel)
+    bool status=true;
+    if (id > maxPanel)
     {
-        return true;
+        status = false;
     }
-    return false;
+    else if (status && checkExists(id))
+    {
+        //Replace or not.
+        status = false;
+    }
+    return status;
 }
 
 
-bool CanvasView::setPanel()
+bool CanvasView::setPanel(std::string comicBookConfigFile)
 {
     bool status;
     QString filename = "";
+    std::string test = "Select a panel (0 - " + std::to_string(maxPanel) +")";
     int panelId = QInputDialog::getInt(this, tr("ComDrawer"),
-        tr("Select a panel:"),
-        penWidth(),
+        test.c_str(),
+        0,
         0, 212, 0, &status);
     if (status)
         status = validatePanel(panelId);
@@ -349,17 +369,14 @@ bool CanvasView::setPanel()
     }
     if (status)
     {
-        QString initPath = QDir::currentPath() + "/untilted";
-        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath, tr("%1 Files (*%2);;")
-            .arg(QString::fromLatin1(".PNG"))
-            .arg(QString::fromLatin1(".png")));
+        filename = saveAs();
         status = savePanel(filename);
        
        
     }
     if (status)
     {
-        writeToFile(filename, panelId);
+        writeToFile(filename, panelId, comicBookConfigFile);
     }
     return true;
 }
@@ -377,7 +394,87 @@ bool CanvasView::savePanel(const QString& fileName)
     return false;
 }
 
+QString CanvasView::saveAs()
+{
+    QString filename;
+    if (_panelName.isEmpty())
+    {
+        QString initPath = QDir::currentPath() + "/untilted";
+        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath, tr("%1 Files (*%2);;")
+            .arg(QString::fromLatin1(".PNG"))
+            .arg(QString::fromLatin1(".png")));
+        _panelName = filename;
+    }
+    else
+    {
+        filename = _panelName;
+    }
+    return filename;
+
+}
+
+bool CanvasView::saveMyPanel()
+{
+    return savePanel(saveAs());
+}
+
 void CanvasView::setMaxPanel(int newMaxPanel)
 {
     maxPanel = newMaxPanel;
+}
+
+bool CanvasView::checkExists(int panelId)
+{
+    std::ifstream fin;
+    bool found = true;
+    std::string search = "N/A";
+    if (panelId == 0)
+    {
+        search = "panelId=cover";
+    }
+    else if (panelId == maxPanel)
+    {
+        search = "panelId=end";
+    }
+    else
+    {
+        search = "panelId=" + std::to_string(panelId);
+    }
+        "panelId="+panelId;
+    fin.open("example.txt");
+    if (fin.fail())
+    {
+        return false;
+    }
+    while (!fin.eof())
+    {
+        std::string temp = "";
+        getline(fin, temp);
+        found = temp.find(search) != std::string::npos;
+    }
+    fin.close();
+    return found;
+}
+
+bool CanvasView::openPanel()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open File"), QDir::currentPath());
+    if (!fileName.isEmpty())
+        return openImage(fileName);
+    return false;
+}
+
+bool CanvasView::openImage(const QString& fileName)
+{
+    QImage loadedImage;
+    if (!loadedImage.load(fileName))
+        return false;
+    QSize newSize = loadedImage.size().expandedTo(size());
+    resizeImage(&loadedImage, newSize);
+    image = loadedImage;
+    isModififed = false;
+    update();
+    _panelName = fileName;
+    return true;
 }

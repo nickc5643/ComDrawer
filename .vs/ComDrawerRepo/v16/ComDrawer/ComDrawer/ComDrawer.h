@@ -45,6 +45,11 @@ private slots:
 	void clearActiveScreen();
 	void openComicBookPreview();
 	void setPanel();
+	void savePanel();
+	void openPanel();
+	void newPanel();
+	void createComic();
+	void openComic();
 
 private:	
 	CanvasView* canvasView;
@@ -71,4 +76,10 @@ private:
 	QAction* previewComicAct;
 	QAction* setPanelAct;
 	QList<QAction*> toolOptions;
+	QAction* savePanelAct;
+	QAction* openComicAct;
+	QAction* createComicAct;
+	QAction* openPanelAct;
+	QAction* newPanelAct;
+
 };
