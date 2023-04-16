@@ -478,3 +478,11 @@ bool CanvasView::openImage(const QString& fileName)
     _panelName = fileName;
     return true;
 }
+
+void CanvasView::newPanel()
+{
+    _panelName = "";
+    image.fill(qRgb(255, 255, 255));
+    update();
+    isModififed = false;
+}

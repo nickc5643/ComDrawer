@@ -143,7 +143,7 @@ void ComDrawer::openPanel()
 }
 void ComDrawer::newPanel()
 {
-
+	canvasView->newPanel();
 }
 void ComDrawer::createComic()
 {
@@ -151,7 +151,7 @@ void ComDrawer::createComic()
 }
 void ComDrawer::openComic()
 {
-
+	comicBook->openComicBook();
 }
 
 
@@ -202,7 +202,7 @@ void ComDrawer::createActions()
 	openPanelAct = new QAction(tr("Open Panel"));
 	connect(openPanelAct, SIGNAL(triggered()), SLOT(openPanel()));
 	newPanelAct = new QAction(tr("New Panel"));
-	connect(savePanelAct, SIGNAL(triggered()), SLOT(newPanel()));
+	connect(newPanelAct, SIGNAL(triggered()), SLOT(newPanel()));
 
 	createComicAct = new QAction(tr("New Comic"));
 	createComicAct->setShortcut(tr("ctrl+n"));
@@ -222,11 +222,12 @@ void ComDrawer::createMenus()
 	fileMenu = new QMenu(tr("&File"), this);
 	fileMenu->addAction(savePanelAct);
 	fileMenu->addSeparator();
+	fileMenu->addAction(openPanelAct);
 	fileMenu->addAction(newPanelAct);
-	fileMenu->addAction(createComicAct);
 	fileMenu->addSeparator();
 	fileMenu->addAction(openComicAct);
-	fileMenu->addAction(openPanelAct);
+	fileMenu->addAction(createComicAct);
+	
 	
 	toolsMenu = new QMenu(tr("&Tools"), this);
 	int counter = 0;

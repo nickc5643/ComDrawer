@@ -65,7 +65,7 @@ void ComicBook::refresh()
 }
 
 /*
-* Selects the page. Currently does nothing.
+* Selects the page.
 */
 void ComicBook::pageSelect()
 {
@@ -87,11 +87,15 @@ void ComicBook::pageSelect()
 */
 void ComicBook::addPage() 
 {
-	if (pageCount < 37)
+	if (pageCount < maxPages)
 	{
 		pageCount++;
 		backPage++;
 		maxPanelCount = ((pageCount - 2) * 6) + 2;
+	}
+	else
+	{
+		QMessageBox::critical(this, tr("ComDrawer"), tr("<p>Max number of pages reached. No more can be added</p>"));
 	}
 }
 
@@ -100,11 +104,16 @@ void ComicBook::addPage()
 */
 void ComicBook::removePage()
 {
-	if (pageCount >3)
+	if (pageCount > minPages)
 	{
+		removeEntry();
 		pageCount--;
 		backPage--;
 		maxPanelCount = ((pageCount - 2) * 6) + 2;
+	}
+	else
+	{
+		QMessageBox::critical(this, tr("ComDrawer"), tr("<p>Minimum number of pages reached. No more can be removed!</p>"));
 	}
 }
 
@@ -177,7 +186,7 @@ void ComicBook::readTextFile(std::string comicTitle)
 	}
 
 
-	while (count >= 0)
+	while (count > 0)
 	{
 		found = false;
 		if (sixPanel)
@@ -193,7 +202,7 @@ void ComicBook::readTextFile(std::string comicTitle)
 			panelId = panelValues;
 			search = "panelId=" + mainPanels;
 		}
-		fin.open(comicTitle);
+		fin.open(_activeComicBookConfigurationFile);
 		if (fin.fail())
 		{
 			break;
@@ -338,4 +347,58 @@ void ComicBook::openComicBook()
 std::string ComicBook::getActiveComicBookConfigurationFile()
 {
 	return _activeComicBookConfigurationFile;
+}
+
+bool ComicBook::removeEntry()
+{
+	bool status = false;
+	std::ifstream fin;
+	std::ofstream fout;
+	int count = 6;
+
+
+	int panelValues = (backPage * 6) + 1;
+	int panelId;
+	std::string search = "";
+	std::string temp = "";
+	while (count > 0)
+	{
+		bool found = false;
+
+		panelId = (panelValues - count--);
+		if (panelId <= panelValues)
+			search = "panelId=" + std::to_string(panelId);
+		else
+			break;
+
+		fin.open(_activeComicBookConfigurationFile);
+
+		if (fin.fail())
+		{
+			status = false;
+			break;
+		}
+
+		fout.open("temp.txt");
+
+		if (fout.fail())
+		{
+			status = false;
+			break;
+		}
+		status = true;
+		while (getline(fin, temp))
+		{
+			temp.replace(temp.find(search), search.length(), "");
+			fout.write(temp.c_str(), temp.size());
+
+		}
+		fin.close();
+		fout.close();
+		remove(_activeComicBookConfigurationFile.c_str());
+		rename("temp.txt", _activeComicBookConfigurationFile.c_str());
+	}
+
+
+	return status;
 }

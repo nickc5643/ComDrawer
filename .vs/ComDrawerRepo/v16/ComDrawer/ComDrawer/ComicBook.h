@@ -63,6 +63,7 @@ private:
     void readTextFile(std::string comicTitle);
     void uploadImage(int panel, std::string filename, QGridLayout* page);
     void setPageNumber(int newPage);
+    bool removeEntry();
 
     QAction* pagesAct;
     QAction* addPageAct;
@@ -72,6 +73,7 @@ private:
     Ui::ComicBook ui;
     QWidget* comicBookArea;
     int maxPages = 37;
+    int minPages = 3;
     int defaultPages = 5;
     int currentPage = 0;
     int coverPage = 0;

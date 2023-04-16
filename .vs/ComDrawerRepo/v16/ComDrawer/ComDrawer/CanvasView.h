@@ -46,6 +46,7 @@ public:
 	bool saveMyPanel();
 	QString saveAs();
 	bool openPanel();
+	void newPanel();
 	
 
 protected:
