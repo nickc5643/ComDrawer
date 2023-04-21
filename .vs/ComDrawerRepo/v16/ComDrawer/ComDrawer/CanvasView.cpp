@@ -486,3 +486,19 @@ void CanvasView::newPanel()
     update();
     isModififed = false;
 }
+
+void CanvasView::selectDefaultElement()
+{
+    QString selectionCaption = "ComDrawer";
+    QString selectionLabael = "Default Element List";
+
+    QString selection = QInputDialog::getItem();
+
+}
+
+void CanvasView::selectCustomElement()
+{
+    QString selectionCaption = "ComDrawer";
+    QString selectionLabael = "Custom Element List";
+    QString selection = QInputDialog::getItem();
+}

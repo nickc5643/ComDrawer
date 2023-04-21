@@ -121,6 +121,14 @@ void ComDrawer::clearActiveScreen()
 */
 void ComDrawer::openComicBookPreview()
 {
+	if (comicBook->getActiveComicBook() == "")
+	{
+		QMessageBox::critical(
+			this,
+			tr("ComDrawer"),
+			tr("Please open or create a comic book."));
+		return;
+	}
 	canvasView->setMaxPanel(comicBook->getPanelCount());
 	comicBook->refresh();
 	comicBook->show();
@@ -128,6 +136,15 @@ void ComDrawer::openComicBookPreview()
 
 void ComDrawer::setPanel()
 {
+
+	if (comicBook->getActiveComicBook() == "")
+	{
+		QMessageBox::critical(
+			this,
+			tr("ComDrawer"),
+			tr("Please open or create a comic book."));
+		return;
+	}
 	canvasView->setMaxPanel(comicBook->getPanelCount());
 	if (canvasView->setPanel(comicBook->getActiveComicBookConfigurationFile()))
 		comicBook->refresh();
@@ -152,6 +169,16 @@ void ComDrawer::createComic()
 void ComDrawer::openComic()
 {
 	comicBook->openComicBook();
+}
+
+void ComDrawer::selectDefaultElement()
+{
+
+}
+
+void ComDrawer::selectCustomElement()
+{
+
 }
 
 
@@ -211,6 +238,11 @@ void ComDrawer::createActions()
 	openComicAct->setShortcut(tr("ctrl+o"));
 	connect(openComicAct, SIGNAL(triggered()), SLOT(openComic()));
 
+	defaultElementAct = new QAction(tr("Default Element"));
+	connect(defaultElementAct, SIGNAL(triggered()), SLOT(selectDefaultElement()));
+	customElementAct = new QAction(tr("Custom Element"));
+	connect(customElementAct, SIGNAL(triggered()), SLOT(selectCustomElement()));
+
 	
 }
 
@@ -247,7 +279,11 @@ void ComDrawer::createMenus()
 	helpMenu = new QMenu(tr("&Help"), this);
 	helpMenu->addAction(aboutAct);
 	
-	
+	elementMenu = new QMenu(tr("&Elements"));
+	elementMenu->addAction(defaultElementAct);
+	elementMenu->addAction(customElementAct);
+
+
 	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(toolsMenu);
 	menuBar()->addAction(setPanelAct);

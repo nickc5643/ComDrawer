@@ -64,6 +64,8 @@ private:
 	void fillArea(const QPoint& endPoint);
 	void resizeImage(QImage* image, const QSize& newSize);
 	bool openImage(const QString& fileName);
+	void selectDefaultElement();
+	void selectCustomElement();
 
 	int pencilWidth;
 	int eraserWidth;

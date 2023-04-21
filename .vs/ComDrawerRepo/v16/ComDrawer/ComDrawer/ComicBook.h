@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <direct.h>
 #include <fstream>
+#include <QFileDialog>
 
 
 
@@ -65,6 +66,7 @@ private:
     void setPageNumber(int newPage);
     bool removeEntry();
 
+
     QAction* pagesAct;
     QAction* addPageAct;
     QAction* removePageAct;
@@ -82,5 +84,7 @@ private:
     int backPage = 4;
     QString _activeComicBook;
     std::string _activeComicBookConfigurationFile;
+    void modifyConfigurationFile(std::string entryToChange, std::string replacementText);
+    void updatePageNumber();
 };
 

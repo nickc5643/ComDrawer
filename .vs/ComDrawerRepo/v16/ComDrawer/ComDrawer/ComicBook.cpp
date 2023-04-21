@@ -28,39 +28,8 @@ ComicBook::~ComicBook()
 */
 void ComicBook::refresh()
 {
-	if (comicBookArea->layout())
-	{
-		int count = 0;
-		while (1)
-		{
-			QLayoutItem* item = comicBookArea->layout()->itemAt(count++);
-			if (item)
-			{
-				comicBookArea->layout()->removeItem(item);
-				QWidget* widget = item->widget();
-				do
-				{
-					if (widget)
-					{
-						delete widget;
-						widget = item->widget();
-					}
-					else
-					{
-						break;
-					}
-				} while (1);
-				delete item;
-			}
-			else
-			{
-				delete item;
-				delete comicBookArea->layout();
-				break;
-			}
-		}
-		
-	}
+	delete comicBookArea;
+	comicBookArea = new QWidget();
 	readTextFile(_activeComicBookConfigurationFile);
 }
 
@@ -92,6 +61,7 @@ void ComicBook::addPage()
 		pageCount++;
 		backPage++;
 		maxPanelCount = ((pageCount - 2) * 6) + 2;
+		updatePageNumber();
 	}
 	else
 	{
@@ -110,6 +80,7 @@ void ComicBook::removePage()
 		pageCount--;
 		backPage--;
 		maxPanelCount = ((pageCount - 2) * 6) + 2;
+		updatePageNumber();
 	}
 	else
 	{
@@ -225,7 +196,7 @@ void ComicBook::readTextFile(std::string comicTitle)
 		fin.close();
 		if (!found)
 		{
-			std::string blankPanel = "C:/Projects/Final_Project/ComDrawer/.vs/ComDrawerRepo/v16/ComDrawer/ComDrawer/blankPanel.png";
+			std::string blankPanel = "blankPanel.png";
 			uploadImage(panelId, blankPanel, page);
 		}
 		if (!sixPanel)
@@ -247,7 +218,7 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 	{
 		page->addWidget(imageLabel, 0, 0, 3, 2);
 	}
-	else if (panel == backPage)
+	else if (panel == maxPanelCount)
 	{
 		page->addWidget(imageLabel, 0, 0, 3, 2);
 	}
@@ -256,7 +227,7 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 		int panelKey = panel;
 		if (panel > 6)
 		{
-			panelKey = (panel - 1) / 6;
+			panelKey = panel - (6 * (currentPage - 1));
 		}
 		
  		if (panelKey == 1)
@@ -287,9 +258,6 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 	}
 	comicBookArea->setLayout(page);
 	setCentralWidget(comicBookArea);
-
-
-
 }
 
 void ComicBook::setPageNumber(int newPage)
@@ -342,7 +310,79 @@ QString ComicBook::getActiveComicBook()
 
 void ComicBook::openComicBook()
 {
+	QString fileName = QFileDialog::getOpenFileName(this,
+		tr("Open File"), QDir::currentPath());
+	
+	if (fileName.isEmpty())
+	{
+		return;
+	}
+	std::string strFileName = fileName.toStdString();
+	if (strFileName.find("_proj.txt") == std::string::npos)
+	{
+		return;
+	}
 
+	_activeComicBookConfigurationFile = strFileName;
+
+	std::ifstream fin;
+	fin.open(_activeComicBookConfigurationFile);
+
+	if (fin.fail())
+	{
+		QMessageBox::critical(
+			this,
+			tr("ComDrawer"),
+			tr("Failed to open project file."));
+		return;
+	}
+	std::string comicNameHeader = "Comic Book Name:";
+	std::string comicPageCountHeader = "Comic Book Page Count:";
+	std::string pgCount;
+
+	while (!fin.eof())
+	{
+		std::string temp = "";
+
+		getline(fin, temp);
+		auto t = temp.find(comicNameHeader) != std::string::npos;
+
+		if (t)
+		{
+			_activeComicBook = QString::fromStdString(temp.substr(comicNameHeader.size() -1, temp.size() - 1));
+
+		}
+		else
+		{
+			break;
+		}
+
+		getline(fin, temp);
+		t = temp.find(comicPageCountHeader) != std::string::npos;
+
+		if (t)
+		{
+			try
+			{
+				pgCount = temp.substr(comicPageCountHeader.size(), temp.size() - 1);
+				pageCount = stoi(pgCount);
+
+			}
+			catch(int num)
+			{
+			
+			}		
+
+		}
+		else
+		{
+			break;
+		}
+
+
+		
+	}
+	fin.close();
 }
 std::string ComicBook::getActiveComicBookConfigurationFile()
 {
@@ -355,7 +395,7 @@ bool ComicBook::removeEntry()
 	std::ifstream fin;
 	std::ofstream fout;
 	int count = 6;
-
+	int id;
 
 	int panelValues = (backPage * 6) + 1;
 	int panelId;
@@ -389,16 +429,78 @@ bool ComicBook::removeEntry()
 		status = true;
 		while (getline(fin, temp))
 		{
-			temp.replace(temp.find(search), search.length(), "");
+			id = temp.find(search);
+			if (id != std::string::npos)
+			{
+				temp.replace(id, search.length(), "");
+			}
+			else
+			{
+				temp = temp + "\n";
+			}
 			fout.write(temp.c_str(), temp.size());
 
 		}
 		fin.close();
 		fout.close();
 		remove(_activeComicBookConfigurationFile.c_str());
-		rename("temp.txt", _activeComicBookConfigurationFile.c_str());
+		status = rename("temp.txt", _activeComicBookConfigurationFile.c_str());
 	}
 
 
 	return status;
+}
+
+void ComicBook::modifyConfigurationFile(std::string entryToChange, std::string replacementText)
+{
+	bool status = false;
+	std::ifstream fin;
+	std::ofstream fout;
+	std::string search = entryToChange;
+	std::string temp = "";
+	bool found = false;
+
+	fin.open(_activeComicBookConfigurationFile);
+
+	if (fin.fail())
+	{
+		return;
+	}
+
+	fout.open("temp.txt");
+
+	if (fout.fail())
+	{
+		return;
+	}
+	status = true;
+	while (getline(fin, temp))
+	{
+		int id = temp.find(search);
+		int size = temp.length();
+		if (id != std::string::npos)
+		{
+			temp.replace(id, size, replacementText);
+		}
+		else
+		{
+			temp = temp + "\n";
+		}
+		fout.write(temp.c_str(), temp.size());
+
+	}
+
+	fin.close();
+	fout.close();
+	remove(_activeComicBookConfigurationFile.c_str());
+	status = rename("temp.txt", _activeComicBookConfigurationFile.c_str());
+		
+}
+
+void ComicBook::updatePageNumber()
+{
+	std::string comicPageCountHeader = "Comic Book Page Count:";
+	std::string replacement = comicPageCountHeader +  std::to_string(pageCount)+"\n";
+	
+	modifyConfigurationFile(comicPageCountHeader, replacement);
 }

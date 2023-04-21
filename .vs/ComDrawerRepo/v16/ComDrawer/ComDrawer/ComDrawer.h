@@ -50,6 +50,8 @@ private slots:
 	void newPanel();
 	void createComic();
 	void openComic();
+	void selectDefaultElement();
+	void selectCustomElement();
 
 private:	
 	CanvasView* canvasView;
@@ -63,6 +65,7 @@ private:
 	QMenu* helpMenu;
 	QMenu* plotMenu;
 	QMenu* openTemplateMenu;
+	QMenu* elementMenu;
 	QAction* open;
 	QAction *aboutAct;
 	QAction* pencilAct;
@@ -81,5 +84,8 @@ private:
 	QAction* createComicAct;
 	QAction* openPanelAct;
 	QAction* newPanelAct;
+	QAction* defaultElementAct;
+	QAction* customElementAct;
+	QAction* newCustomElementAct;
 
 };
