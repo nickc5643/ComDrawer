@@ -18,7 +18,7 @@ CanvasView::CanvasView(QWidget* parent)
     pencilColor = Qt::gray;
     eraserColor = Qt::white;
     paintColor = Qt::black;
-    workingTool = pencil;
+    _workingTool = pencil;
 
 }
 
@@ -70,7 +70,7 @@ void CanvasView::setEraserWidth(int width)
 */
 void CanvasView::setColor()
 {
-    if (workingTool == paint)
+    if (_workingTool == paint)
     {
         QColor newColor = QColorDialog::getColor(penColor());
         if (!newColor.isValid())
@@ -94,7 +94,7 @@ void CanvasView::setWidth()
 {
     bool ok;
     int newWidth = 0;
-    if (getWorkingTool() == paint)
+    if (getworkingTool() == paint)
     {
         newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
             tr("Select paint width:"),
@@ -103,7 +103,7 @@ void CanvasView::setWidth()
         if (ok)
             setPaintWidth(newWidth);
     }
-    else if (getWorkingTool() == eraser)
+    else if (getworkingTool() == eraser)
     {
         newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
             tr("Select eraser width:"),
@@ -140,7 +140,11 @@ void CanvasView::mouseMoveEvent(QMouseEvent* event)
 {
     if ((event->buttons() & Qt::LeftButton) && isDrawing)
     {
-        drawLineTo(event->pos());
+        if (_workingTool != element)
+        {          
+            drawLineTo(event->pos());
+        }
+        
     }
 
 }
@@ -153,7 +157,15 @@ void CanvasView::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && isDrawing)
     {
-        drawLineTo(event->pos());
+        if (_workingTool != element)
+        {
+            drawLineTo(event->pos());
+        }
+        else
+        {
+            placeElement(event->x(), event->y());
+        }
+        
         isDrawing = false;
     }
 
@@ -196,7 +208,7 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
     QPainter painter(&image);
     QColor drawingColor;
     int drawingWidth = 0;
-    switch (workingTool)
+    switch (_workingTool)
     {
     case pencil:
         drawingColor = pencilColor;
@@ -214,6 +226,11 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
         break;
     }
 
+    if (drawingWidth == 0)
+    {
+        return;
+    }
+
     painter.setPen(QPen(drawingColor, drawingWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawLine(lastKnownPoint, endPoint);
     int rad = (drawingWidth / 2) + 2;
@@ -224,6 +241,25 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
     {
         isModififed = true;
     }
+}
+
+void CanvasView::placeElement(int x, int y)
+{
+   QPixmap elementToPlace;
+   if (!elementToPlace.load(_elementPlacer))
+   {
+       return;
+   }
+
+   QPixmap scaledElement = elementToPlace.scaled(elementToPlace.width(), elementToPlace.height());
+   QPainter painter(&image);
+   painter.drawPixmap(x, y, scaledElement.width(), scaledElement.height(), scaledElement);
+   painter.end();
+   update();
+   if (!isModififed)
+   {
+       isModififed = true;
+   }
 }
 
 /*
@@ -240,7 +276,6 @@ void CanvasView::fillArea(const QPoint& endPoint)
     @param[in] - newSize - QSize
 
 */
-
 void CanvasView::resizeImage(QImage* image, const QSize& newSize)
 {
     if (image->size() == newSize)
@@ -264,19 +299,19 @@ void CanvasView::setWorkingToolSelection(int selection)
     switch (selection)
     {
     case 0:
-        workingTool = pencil;
+        _workingTool = pencil;
         break;
     case 1:
-        workingTool = paint;
+        _workingTool = paint;
         break;
     case 2:
-        workingTool = eraser;
+        _workingTool = eraser;
         break;
     case 3:
-        workingTool = fillCan;
+        _workingTool = fillCan;
         break;
     case 4:
-        workingTool = straightLine;
+        _workingTool = straightLine;
         break;
     default:
         break;
@@ -344,8 +379,19 @@ bool CanvasView::validatePanel(int id)
     }
     else if (status && checkExists(id))
     {
-        //Replace or not.
-        status = false;
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "ComDrawer", "Panel is already set, do you want to replace?",
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (reply == QMessageBox::Yes)
+        {
+            status = true;
+            removeEntry(id);
+        }
+        else
+        {
+            status = false;
+        }
     }
     return status;
 }
@@ -355,6 +401,7 @@ bool CanvasView::setPanel(std::string comicBookConfigFile)
 {
     bool status;
     QString filename = "";
+    _activeComicBookConfigurationFile = comicBookConfigFile;
     std::string test = "Select a panel (0 - " + std::to_string(maxPanel) +")";
     int panelId = QInputDialog::getInt(this, tr("ComDrawer"),
         test.c_str(),
@@ -440,8 +487,8 @@ bool CanvasView::checkExists(int panelId)
     {
         search = "panelId=" + std::to_string(panelId);
     }
-        "panelId="+panelId;
-    fin.open("example.txt");
+
+    fin.open(_activeComicBookConfigurationFile);
     if (fin.fail())
     {
         return false;
@@ -451,6 +498,10 @@ bool CanvasView::checkExists(int panelId)
         std::string temp = "";
         getline(fin, temp);
         found = temp.find(search) != std::string::npos;
+        if (found)
+        {
+            break;
+        }
     }
     fin.close();
     return found;
@@ -490,15 +541,118 @@ void CanvasView::newPanel()
 void CanvasView::selectDefaultElement()
 {
     QString selectionCaption = "ComDrawer";
-    QString selectionLabael = "Default Element List";
+    QString selectionLabel = "Default Element List";
+    QDir dir("defaultElements");
 
-    QString selection = QInputDialog::getItem();
+    dir.setSorting(QDir::Name);
+    QStringList defaultElements = dir.entryList(QDir::AllEntries | QDir::Dirs);
 
+    QString selection = QInputDialog::getItem(this,selectionCaption, selectionLabel, defaultElements);
+    _elementPlacer = "defaultElements/"+selection;
+    _workingTool = element;
 }
 
 void CanvasView::selectCustomElement()
 {
     QString selectionCaption = "ComDrawer";
-    QString selectionLabael = "Custom Element List";
-    QString selection = QInputDialog::getItem();
+    QString selectionLabel = "Custom Elements List";
+    QDir dir("customElements/");
+
+    dir.setSorting(QDir::Name);
+    QStringList customElements = dir.entryList(QDir::AllEntries | QDir::Dirs);
+
+    QString selection = QInputDialog::getItem(this, selectionCaption, selectionLabel, customElements);
+    _elementPlacer = "customElements/"+selection;
+    _workingTool = element;
+}
+
+void CanvasView::modifyConfigurationFile(std::string entryToChange, std::string replacementText)
+{
+    bool status = false;
+    std::ifstream fin;
+    std::ofstream fout;
+    std::string search = entryToChange;
+    std::string temp = "";
+    bool found = false;
+
+    fin.open(_activeComicBookConfigurationFile);
+
+    if (fin.fail())
+    {
+        return;
+    }
+
+    fout.open("temp.txt");
+
+    if (fout.fail())
+    {
+        return;
+    }
+    status = true;
+    while (getline(fin, temp))
+    {
+        int id = temp.find(search);
+        int size = temp.length();
+        if (id != std::string::npos)
+        {
+            temp.replace(id, size, replacementText);
+        }
+        else
+        {
+            temp = temp + "\n";
+        }
+        fout.write(temp.c_str(), temp.size());
+
+    }
+
+    fin.close();
+    fout.close();
+    remove(_activeComicBookConfigurationFile.c_str());
+    status = rename("temp.txt", _activeComicBookConfigurationFile.c_str());
+
+}
+
+void CanvasView::removeEntry(int id)
+{
+    std::string search;
+    if (id == 0)
+    {
+        search = "panelId=cover";
+    }
+    else if (id == maxPanel)
+    {
+        search = "panelId=end";
+    }
+    else
+    {
+        search = "panelId=" + std::to_string(id);
+    }
+    modifyConfigurationFile(search, "");
+}
+
+void CanvasView::saveElement()
+{
+    QString filename;
+    if (_ElementName.isEmpty())
+    {
+        QString initPath = QDir::currentPath() + "customElements/untilted";
+        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath, tr("%1 Files (*%2);;")
+            .arg(QString::fromLatin1(".PNG"))
+            .arg(QString::fromLatin1(".png")));
+        _ElementName = filename;
+    }
+    else
+    {
+        filename = _ElementName;
+    }
+
+    QImage elementImage = image;
+    resizeImage(&elementImage, size());
+
+
+    if (elementImage.save(filename))
+    {
+        isModififed = false;
+    }
+
 }

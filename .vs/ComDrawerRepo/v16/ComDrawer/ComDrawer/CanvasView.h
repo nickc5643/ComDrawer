@@ -24,14 +24,15 @@ public:
 		eraser = 2,
 		fillCan = 3,
 		straightLine = 4,
-		textbox = 5
+		textbox = 5,
+		element = 6
 	};
 	CanvasView(QWidget* parent = nullptr);
 	~CanvasView();
 	void setPencilWidth(int width);
 	int getPencilWidth() const { return pencilWidth; };
 	int getEraserWidth() { return eraserWidth; };;
-	drawingTool getWorkingTool() { return workingTool;};
+	drawingTool getworkingTool() { return _workingTool;};
 	QColor penColor() const { return paintColor; }
 	int penWidth() const { return paintWidth; }
 	void setWorkingToolSelection(int selection);
@@ -47,6 +48,9 @@ public:
 	QString saveAs();
 	bool openPanel();
 	void newPanel();
+	void selectDefaultElement();
+	void selectCustomElement();
+	void saveElement();
 	
 
 protected:
@@ -59,13 +63,17 @@ protected:
 	
 
 private:
-
 	void drawLineTo(const QPoint& endPoint);
 	void fillArea(const QPoint& endPoint);
 	void resizeImage(QImage* image, const QSize& newSize);
 	bool openImage(const QString& fileName);
-	void selectDefaultElement();
-	void selectCustomElement();
+	void modifyConfigurationFile(std::string entryToChange, std::string replacementText);
+	void removeEntry(int id);
+	bool savePanel(const QString& fileName);
+	void writeToFile(const QString& fileName, int panelId, std::string comicBookConfigFile);
+	bool validatePanel(int id);
+	bool checkExists(int panelId);
+	void placeElement(int x, int y);
 
 	int pencilWidth;
 	int eraserWidth;
@@ -77,13 +85,13 @@ private:
 	QColor paintColor;
 	QImage image;
 	QPoint lastKnownPoint;
-	drawingTool workingTool;
-	bool savePanel(const QString& fileName);
-	void writeToFile(const QString& fileName, int panelId, std::string comicBookConfigFile);
-	bool validatePanel(int id);
+	drawingTool _workingTool;
 	int maxPanel;
-	bool checkExists(int panelId);
 	QString _panelName;
+	QString _ElementName;
+	std::string _activeComicBookConfigurationFile;
+	QString _elementPlacer;
+	
 
 };
 

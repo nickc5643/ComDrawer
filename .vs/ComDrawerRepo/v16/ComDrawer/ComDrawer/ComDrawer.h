@@ -52,6 +52,7 @@ private slots:
 	void openComic();
 	void selectDefaultElement();
 	void selectCustomElement();
+	void saveElement();
 
 private:	
 	CanvasView* canvasView;

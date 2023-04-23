@@ -13,11 +13,7 @@ ComDrawer::ComDrawer(QWidget* parent)
 	comicBook = new ComicBook();
 	ui.setupUi(this);
 	setWindowTitle(tr("ComDrawer - Canvas View"));
-	
-	
 	setCentralWidget(canvasView);
-	
-
 	resize(500, 500);
 }
 
@@ -130,6 +126,9 @@ void ComDrawer::openComicBookPreview()
 		return;
 	}
 	canvasView->setMaxPanel(comicBook->getPanelCount());
+	comicBook->setMaximumHeight(900);
+	comicBook->setMaximumWidth(1800);
+	comicBook->resize(1800, 900);
 	comicBook->refresh();
 	comicBook->show();
 }
@@ -173,15 +172,18 @@ void ComDrawer::openComic()
 
 void ComDrawer::selectDefaultElement()
 {
-
+	canvasView->selectDefaultElement();
 }
 
 void ComDrawer::selectCustomElement()
 {
-
+	canvasView->selectCustomElement();
 }
 
-
+void ComDrawer::saveElement()
+{
+	canvasView->saveElement();
+}
 
 /*
 	Creates the action commands, currenlty supports:
@@ -226,6 +228,10 @@ void ComDrawer::createActions()
 	savePanelAct->setShortcut(tr("ctrl+s"));
 	connect(savePanelAct, SIGNAL(triggered()), SLOT(savePanel()));
 
+	newCustomElementAct = new QAction(tr("Save Custom Element"));
+	newCustomElementAct->setShortcut(tr("ctrl+e"));
+	connect(newCustomElementAct, SIGNAL(triggered()), SLOT(saveElement()));
+
 	openPanelAct = new QAction(tr("Open Panel"));
 	connect(openPanelAct, SIGNAL(triggered()), SLOT(openPanel()));
 	newPanelAct = new QAction(tr("New Panel"));
@@ -253,6 +259,7 @@ void ComDrawer::createMenus()
 {
 	fileMenu = new QMenu(tr("&File"), this);
 	fileMenu->addAction(savePanelAct);
+	fileMenu->addAction(newCustomElementAct);
 	fileMenu->addSeparator();
 	fileMenu->addAction(openPanelAct);
 	fileMenu->addAction(newPanelAct);
@@ -286,6 +293,7 @@ void ComDrawer::createMenus()
 
 	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(toolsMenu);
+	menuBar()->addMenu(elementMenu);
 	menuBar()->addAction(setPanelAct);
 	menuBar()->addAction(previewComicAct);
 	menuBar()->addAction(clearAct);

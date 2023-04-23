@@ -10,8 +10,14 @@ ComicBook::ComicBook(QWidget* parent)
 	ui.setupUi(this);
 	setWindowTitle(tr("ComDrawer - Comic Book Preview"));
 	currentPage = 0;
+	pageCount = 5;
 	comicBookArea = new QWidget();
 	maxPanelCount = ((pageCount - 2) * 6) + 2;
+	_maxWidth = 1800;
+	_maxHeight = 900;
+	_panelWidth = _maxWidth / 2;
+	_panelHeight = _maxHeight / 3;
+	
 	resize(500, 500);
 }
 
@@ -30,6 +36,7 @@ void ComicBook::refresh()
 {
 	delete comicBookArea;
 	comicBookArea = new QWidget();
+	comicBookArea->resize(_maxWidth, _maxHeight);
 	readTextFile(_activeComicBookConfigurationFile);
 }
 
@@ -95,7 +102,141 @@ int ComicBook::getPanelCount()
 
 void ComicBook::downloadComicBook()
 {
+	//_activeComicBook
+	QString filename =  "My_Book.pdf";
+	QPdfWriter writer(filename);
+	writer.setPageSize(QPagedPaintDevice::Letter);
+	writer.setPageMargins(QMargins(15, 15, 15, 15));
+	QPainter painter(&writer);
+	std::string panelId;
+	std::string search;
+	std::string imageToPost;
+	std::ifstream fin;
+	std::string imageFilename;
+	int countPage = 0;
+	int maxWidth = 9500;
+	int maxHeight = 12500;
+	int panelMaxWidth = 4725;
+	int panelMaxHeight = 4141;
+	QPen drawPen(Qt::black, 20);
+	painter.setPen(drawPen);
+	
+	bool found;
+	for (int i = 0; i <= maxPanelCount; i++)
+	{
+		panelId = "";
+		found = false;
+		imageFilename = "";
+		if (i == 0)
+		{
+			panelId = "cover";
+		}
+		else if (i == maxPanelCount)
+		{
+			panelId = "end";
+		}
+		else
+		{
+			panelId = std::to_string(i);
+		}
+		search = "panelId=" + panelId;
 
+		fin.open(_activeComicBookConfigurationFile);
+		if (fin.fail())
+		{
+			break;
+		}
+
+		while (!fin.eof())
+		{
+			std::string temp = "";
+			getline(fin, temp);
+			auto t = temp.find(search) != std::string::npos;
+
+			if (t)
+			{
+				imageFilename = temp.substr(search.size() + 1, temp.size() - 1);
+				found = true;
+				break;
+			}
+		}
+		fin.close();
+
+		if (!found)
+		{
+			if (i == coverPage || i == maxPanelCount)
+			{
+				imageFilename = "blankCoverBackPanel.png";
+			}
+			else
+			{
+				imageFilename = "blankPanel.png";
+			}
+		}
+
+		QImage imageToPublish(QString::fromStdString(imageFilename));
+
+		if (i == coverPage)
+		{
+			imageToPublish = imageToPublish.scaled(maxWidth, maxHeight);
+			painter.drawImage(0, 0, imageToPublish);
+		}
+		else if (i == maxPanelCount)
+		{
+			imageToPublish = imageToPublish.scaled(_maxWidth, _maxHeight, Qt::KeepAspectRatioByExpanding);
+			painter.drawImage(0,0 , imageToPublish);
+		}
+		else
+		{
+			imageToPublish = imageToPublish.scaled(panelMaxWidth, panelMaxHeight);
+	
+
+			int panelKey = i;
+			if (i > 6)
+			{
+				panelKey = i - (6 * (countPage - 1));
+			}
+
+			if (panelKey == 1)
+			{
+				painter.drawImage(0, 0, imageToPublish);
+				painter.drawLine(0,4166,9500,4166);//Horizontal line
+				painter.drawLine(4750, 0, 4750, 12498);
+
+			}
+			else if (panelKey == 2)
+			{
+				painter.drawImage(4752, 0, imageToPublish);
+
+			}
+			else if (panelKey == 3)
+			{
+				painter.drawImage(0, 4167, imageToPublish);
+				painter.drawLine(0, 8332, 9500, 8332);
+			}
+			else if (panelKey == 4)
+			{
+				painter.drawImage(4752, 4167, imageToPublish);
+			}
+			else if (panelKey == 5)
+			{
+				painter.drawImage(0, 8334, imageToPublish);
+				painter.drawLine(0, 12498, 9500, 12498);
+			}
+			else if (panelKey == 6)
+			{
+				painter.drawImage(4752, 8334, imageToPublish);
+			}
+		}
+		if (i % 6 == 0)
+		{
+			writer.newPage();
+			countPage++;
+		}
+
+
+	}
+	painter.end();
 }
 
 /*
@@ -196,7 +337,16 @@ void ComicBook::readTextFile(std::string comicTitle)
 		fin.close();
 		if (!found)
 		{
-			std::string blankPanel = "blankPanel.png";
+			std::string blankPanel;
+			if (panelId == coverPage || panelId == maxPanelCount)
+			{
+				blankPanel = "blankCoverBackPanel.png";
+			}
+			else
+			{
+				blankPanel = "blankPanel.png";
+			}
+			
 			uploadImage(panelId, blankPanel, page);
 		}
 		if (!sixPanel)
@@ -213,17 +363,33 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 {
 	QImage panelImage(filename.c_str());
 	QLabel* imageLabel = new QLabel();
-	imageLabel->setPixmap(QPixmap::fromImage(panelImage));
+	QFrame* myHFrame = new QFrame();
+	myHFrame->setFrameShape(QFrame::HLine);
+	QFrame* myVFrame = new QFrame();
+	myVFrame->setFrameShape(QFrame::VLine);
+	
 	if (panel == coverPage)
 	{
+		panelImage = panelImage.scaled(_maxWidth, _maxHeight, Qt::KeepAspectRatioByExpanding);
+		imageLabel->setPixmap(QPixmap::fromImage(panelImage));
+		imageLabel->setMaximumHeight(_maxHeight);
+		imageLabel->setMaximumWidth(_maxWidth);
 		page->addWidget(imageLabel, 0, 0, 3, 2);
 	}
 	else if (panel == maxPanelCount)
 	{
+		panelImage = panelImage.scaled(_maxWidth, _maxHeight, Qt::KeepAspectRatioByExpanding);
+		imageLabel->setPixmap(QPixmap::fromImage(panelImage));
+		imageLabel->setMaximumHeight(_maxHeight);
+		imageLabel->setMaximumWidth(_maxWidth);
 		page->addWidget(imageLabel, 0, 0, 3, 2);
 	}
 	else
 	{
+		panelImage = panelImage.scaled(_panelWidth, _panelHeight, Qt::IgnoreAspectRatio);
+		imageLabel->setPixmap(QPixmap::fromImage(panelImage));
+		page->addWidget(myVFrame, 0, 1, 3, 3);
+		
 		int panelKey = panel;
 		if (panel > 6)
 		{
@@ -232,15 +398,19 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 		
  		if (panelKey == 1)
 		{
-			page->addWidget(imageLabel, 0, 0, 1, 1);
+			page->addWidget(myHFrame, 0, 0, 2, 2);
+			page->addWidget(imageLabel, 0, 0, 1, 1);		
+			
 		}
 		else if (panelKey == 2)
 		{
 			page->addWidget(imageLabel, 0, 1, 1, 1);
+			
 		}
 		else if (panelKey == 3)
 		{
 			page->addWidget(imageLabel, 1, 0, 1, 1);
+			page->addWidget(myHFrame, 1, 0,2, 2);
 		}
 		else if (panelKey == 4)
 		{
@@ -254,9 +424,9 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 		{
 			page->addWidget(imageLabel, 2, 1, 1, 1);
 		}
-
 	}
 	comicBookArea->setLayout(page);
+
 	setCentralWidget(comicBookArea);
 }
 
@@ -366,18 +536,18 @@ void ComicBook::openComicBook()
 			{
 				pgCount = temp.substr(comicPageCountHeader.size(), temp.size() - 1);
 				pageCount = stoi(pgCount);
+				backPage = pageCount-1;
+				maxPanelCount = ((pageCount - 2) * 6) + 2;
 
 			}
-			catch(int num)
+			catch (int num)
 			{
-			
-			}		
+				break;
+			}
 
 		}
-		else
-		{
-			break;
-		}
+	
+		break;
 
 
 		
@@ -503,4 +673,14 @@ void ComicBook::updatePageNumber()
 	std::string replacement = comicPageCountHeader +  std::to_string(pageCount)+"\n";
 	
 	modifyConfigurationFile(comicPageCountHeader, replacement);
+}
+
+/*
+* Handles resize events.
+* @params[in] - event - resize  event.
+*/
+void ComicBook::resizeEvent(QResizeEvent* event)
+{
+	//refresh();
+	QWidget::resizeEvent(event);
 }
