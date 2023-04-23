@@ -65,7 +65,7 @@ private slots:
 private:
     void createActions();
     void createMenus();
-    void readTextFile(std::string comicTitle);
+    void readTextFile();
     void uploadImage(int panel, std::string filename, QGridLayout* page);
     void setPageNumber(int newPage);
     bool removeEntry();

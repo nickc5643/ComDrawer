@@ -22,19 +22,17 @@ public:
 		pencil = 0,
 		paint = 1,
 		eraser = 2,
-		fillCan = 3,
-		straightLine = 4,
-		textbox = 5,
-		element = 6
+		textbox = 3,
+		element = 4
 	};
 	CanvasView(QWidget* parent = nullptr);
 	~CanvasView();
 	void setPencilWidth(int width);
-	int getPencilWidth() const { return pencilWidth; };
-	int getEraserWidth() { return eraserWidth; };;
+	int getPencilWidth() const { return _pencilWidth; };
+	int getEraserWidth() { return _eraserWidth; };;
 	drawingTool getworkingTool() { return _workingTool;};
-	QColor penColor() const { return paintColor; }
-	int penWidth() const { return paintWidth; }
+	QColor penColor() const { return _paintColor; }
+	int penWidth() const { return _paintWidth; }
 	void setWorkingToolSelection(int selection);
 	void setPaintWidth(int width);
 	void setPaintColor(const QColor &color);
@@ -51,6 +49,8 @@ public:
 	void selectDefaultElement();
 	void selectCustomElement();
 	void saveElement();
+	int getTextBoxWidth();
+	void setTextBoxWidth(int newWidth);
 	
 
 protected:
@@ -64,8 +64,7 @@ protected:
 
 private:
 	void drawLineTo(const QPoint& endPoint);
-	void fillArea(const QPoint& endPoint);
-	void resizeImage(QImage* image, const QSize& newSize);
+	void resizeImage(QImage* _image, const QSize& newSize);
 	bool openImage(const QString& fileName);
 	void modifyConfigurationFile(std::string entryToChange, std::string replacementText);
 	void removeEntry(int id);
@@ -74,19 +73,21 @@ private:
 	bool validatePanel(int id);
 	bool checkExists(int panelId);
 	void placeElement(int x, int y);
+	void placeText(int x, int y);
 
-	int pencilWidth;
-	int eraserWidth;
-	int paintWidth;
-	bool isDrawing;
-	bool isModififed;
-	QColor pencilColor;
-	QColor eraserColor;
-	QColor paintColor;
-	QImage image;
-	QPoint lastKnownPoint;
+	int _pencilWidth;
+	int _eraserWidth;
+	int _paintWidth;
+	int _textboxWidth;
+	bool _isDrawing;
+	bool _isModified;
+	QColor _pencilColor;
+	QColor _eraserColor;
+	QColor _paintColor;
+	QImage _image;
+	QPoint _lastKnownPoint;
 	drawingTool _workingTool;
-	int maxPanel;
+	int _maxPanel;
 	QString _panelName;
 	QString _ElementName;
 	std::string _activeComicBookConfigurationFile;
