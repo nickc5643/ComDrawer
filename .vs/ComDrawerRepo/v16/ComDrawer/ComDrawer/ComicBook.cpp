@@ -30,14 +30,14 @@ ComicBook::~ComicBook()
 }
 
 /*
-* Refreshes the screen. Currently does nothing.
+* Refreshes the preview window.
 */
 void ComicBook::refresh()
 {
 	delete comicBookArea;
 	comicBookArea = new QWidget();
 	comicBookArea->resize(_maxWidth, _maxHeight);
-	readTextFile(_activeComicBookConfigurationFile);
+	readTextFile();
 }
 
 /*
@@ -59,7 +59,7 @@ void ComicBook::pageSelect()
 }
 
 /*
-* Adds the page. Currently does nothing.
+* Adds the page.
 */
 void ComicBook::addPage() 
 {
@@ -77,7 +77,7 @@ void ComicBook::addPage()
 }
 
 /*
-* Removes the page. Currently does nothing.
+* Removes the last page page. 
 */
 void ComicBook::removePage()
 {
@@ -95,15 +95,20 @@ void ComicBook::removePage()
 	}
 }
 
+/*
+* Returns the max panel count.
+*/
 int ComicBook::getPanelCount()
 {
 	return maxPanelCount;
 }
 
+/*
+* Stores the comic book as a PDF File for the user to use.
+*/
 void ComicBook::downloadComicBook()
 {
-	//_activeComicBook
-	QString filename =  "My_Book.pdf";
+	QString filename = _activeComicBook + "Book.pdf";
 	QPdfWriter writer(filename);
 	writer.setPageSize(QPagedPaintDevice::Letter);
 	writer.setPageMargins(QMargins(15, 15, 15, 15));
@@ -267,10 +272,11 @@ void ComicBook::createMenus()
 	menuBar()->addAction(pagesAct);
 }
 
-void ComicBook::readTextFile(std::string comicTitle)
+/*
+* Reads the configuration text file to place the panels.
+*/
+void ComicBook::readTextFile()
 {
-	
-
 	QGridLayout* page = new QGridLayout();
 	int panelValues = 0;
 	std::string mainPanels = "";
@@ -359,6 +365,13 @@ void ComicBook::readTextFile(std::string comicTitle)
 		
 }
 
+/*
+* Adds a panel image to the preview window
+* 
+* @param[in] - panel id - Id of te panel.
+* @param[in] - filename - Configuration file name.
+* @param[in] - page - layout to add the images to.
+*/
 void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 {
 	QImage panelImage(filename.c_str());
@@ -430,11 +443,17 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 	setCentralWidget(comicBookArea);
 }
 
+/*
+* Updates the current page number.
+*/
 void ComicBook::setPageNumber(int newPage)
 {
 	currentPage = newPage;
 }
 
+/*
+* Creates the comic book structure. 
+*/
 void ComicBook::createComicBook()
 {
 	bool status;
@@ -473,11 +492,17 @@ void ComicBook::createComicBook()
 	}
 }
 
+/*
+* Returns the Active comic book name
+*/
 QString ComicBook::getActiveComicBook()
 {
 	return _activeComicBook;
 }
 
+/*
+* Opens the comic book file.
+*/
 void ComicBook::openComicBook()
 {
 	QString fileName = QFileDialog::getOpenFileName(this,
@@ -519,7 +544,7 @@ void ComicBook::openComicBook()
 
 		if (t)
 		{
-			_activeComicBook = QString::fromStdString(temp.substr(comicNameHeader.size() -1, temp.size() - 1));
+			_activeComicBook = QString::fromStdString(temp.substr(comicNameHeader.size(), temp.size() - 1));
 
 		}
 		else
@@ -554,11 +579,19 @@ void ComicBook::openComicBook()
 	}
 	fin.close();
 }
+/*
+* Gets the configuration filename for the project.
+*/
 std::string ComicBook::getActiveComicBookConfigurationFile()
 {
 	return _activeComicBookConfigurationFile;
 }
 
+/*
+* Removes a given entry.
+* 
+* @returns - True if the entry was removed.
+*/
 bool ComicBook::removeEntry()
 {
 	bool status = false;
@@ -621,6 +654,12 @@ bool ComicBook::removeEntry()
 	return status;
 }
 
+/*
+* Modifes the configuration file.
+* 
+* @param[in] - entryToChange - String name to change.
+* @param[in] - replacementText - String value of new string.
+*/
 void ComicBook::modifyConfigurationFile(std::string entryToChange, std::string replacementText)
 {
 	bool status = false;
@@ -667,6 +706,10 @@ void ComicBook::modifyConfigurationFile(std::string entryToChange, std::string r
 		
 }
 
+
+/*
+* Updates page number in the configuration file.
+*/
 void ComicBook::updatePageNumber()
 {
 	std::string comicPageCountHeader = "Comic Book Page Count:";
