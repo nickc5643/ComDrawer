@@ -2,25 +2,40 @@
 #include <QtWidgets>
 #include <QMainWindow>
 #include <string>
+#include "ComDrawerCommand.h"
 /*
   Class constructor
 */
+
+CanvasView* _cv_instance = nullptr;
+
 CanvasView::CanvasView(QWidget* parent)
     : QWidget(parent)
 {
-    setAttribute(Qt::WA_StaticContents);
+    setAttribute(Qt::WA_StaticContents, Qt::WA_TransparentForMouseEvents);
+    setMouseTracking(true);
+    _undoStack = new QUndoStack(this);
     _isDrawing = false;
     _isModified = false;
-    _pencilWidth = 1;
-    _eraserWidth = 1;
-    _paintWidth = 1;
+    _pencilWidth = 5;
+    _eraserWidth = 10;
+    _paintWidth = 10;
     _maxPanel = 20;
     _textboxWidth = 12;
     _pencilColor = Qt::gray;
     _eraserColor = Qt::white;
     _paintColor = Qt::black;
     _workingTool = pencil;
-
+    _canvasLogger = new CanvasLogger();
+    _cv_instance = this;
+    _elementWidth = -1;
+    _elementHeight = -1;
+    _previewDisplay = new QLabel(this);
+    _drawingToolPreviewDisplay = new QLabel(this);
+    _straightLineColor = Qt::black;
+    _straightLineWidth = 10;
+    _saveCustomElementPreview = new ElementPreview();
+    _image.fill(Qt::white);
 }
 
 
@@ -51,6 +66,17 @@ void CanvasView::setPaintWidth(int width)
 void CanvasView::setPaintColor(const QColor &color)
 {
     _paintColor = color;
+}
+
+void CanvasView::setStraightLineWidth(int width)
+{
+    
+    _straightLineWidth = width;
+
+}
+void CanvasView::setStraightLineColor(const QColor& color)
+{
+    _straightLineColor = color;
 }
 
 /*
@@ -91,10 +117,37 @@ void CanvasView::setWorkingToolSelection(int selection)
     case 3:
         _workingTool = textbox;
         break;
+    case 5:
+        _workingTool = straightLine;
     default:
         break;
     }
 
+}
+
+QUndoStack* CanvasView::getUndoStack()
+{
+    return _undoStack;
+}
+
+CanvasView* CanvasView::getInstance()
+{
+    return _cv_instance;
+}
+
+void CanvasView::setImage(QImage updatedImage)
+{
+    if (updatedImage.size() != size())
+    {
+        resizeImage(&updatedImage, size());
+    }
+    _image = updatedImage;
+    update();
+}
+
+QImage CanvasView::getImage()
+{
+    return _image;
 }
 
 /* End Getters and Setters */
@@ -105,7 +158,7 @@ void CanvasView::setWorkingToolSelection(int selection)
 */
 void CanvasView::setColor()
 {
-    if (_workingTool == paint)
+    if (getworkingTool() == paint)
     {
         QColor newColor = QColorDialog::getColor(penColor());
         if (!newColor.isValid())
@@ -114,6 +167,16 @@ void CanvasView::setColor()
             return;
         }
         setPaintColor(newColor);
+    }
+    else if (getworkingTool() == straightLine)
+    {
+        QColor newColor = QColorDialog::getColor(penColor());
+        if (!newColor.isValid())
+        {
+            QMessageBox::critical(this, tr("ComDrawer"), tr("<p> Selected color was not valid.</p>"));
+            return;
+        }
+        setStraightLineColor(newColor);
     }
     else
     {
@@ -134,7 +197,7 @@ void CanvasView::setWidth()
         newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
             tr("Select paint width:"),
             penWidth(),
-            1, 50, 1, &ok);
+            1, 100, 1, &ok);
         if (ok)
             setPaintWidth(newWidth);
     }
@@ -143,7 +206,7 @@ void CanvasView::setWidth()
         newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
             tr("Select eraser width:"),
             getEraserWidth(),
-            1, 50, 1, &ok);
+            1, 100, 1, &ok);
         if (ok)
             setEraserWidth(newWidth);
     }
@@ -157,6 +220,15 @@ void CanvasView::setWidth()
             setTextBoxWidth(newWidth);
             
     }
+    else if (getworkingTool() == straightLine)
+    {
+        newWidth = QInputDialog::getInt(this, tr("ComDrawer"),
+            tr("Select Text Font Size:"),
+            _straightLineWidth,
+            1, 100, 1, &ok);
+        if (ok)
+            setStraightLineWidth(newWidth);
+    }
     else
     {
         QMessageBox::critical(this, tr("ComDrawer"), tr("<p> Only the paint brush and eraser can change widths.</p>"));
@@ -169,11 +241,32 @@ void CanvasView::setWidth()
 */
 void CanvasView::mousePressEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton)
+
+    if (_workingTool != element)
+    {
+
+        drawingToolPreviewDisplay(event->x(), event->y());
+    }
+    else
+    {
+        drawingToolPreviewHide();
+    }
+
+    if ((event->buttons() & Qt::LeftButton))
     {
         _lastKnownPoint = event->pos();
         _isDrawing = true;
-       
+        if (_workingTool != element)
+        {
+            QUndoCommand* tmp = new ComDrawerCommand(_image, tr("Added new line"));
+            _undoStack->push(tmp);
+            
+        }
+    }
+    else if ((event->buttons() & Qt::RightButton) && _workingTool == element)
+    {
+        elementPreviewDisplay(event->x(), event->y());
+
     }
 }
 
@@ -183,14 +276,38 @@ void CanvasView::mousePressEvent(QMouseEvent* event)
 */
 void CanvasView::mouseMoveEvent(QMouseEvent* event)
 {
-    if ((event->buttons() & Qt::LeftButton) && _isDrawing)
+    if (_workingTool != element)
     {
-        if (_workingTool != element)
-        {          
-            drawLineTo(event->pos());
-        }
-        
+        drawingToolPreviewDisplay(event->x(), event->y());
     }
+    else
+    {
+        drawingToolPreviewHide();
+    }
+
+    if (getworkingTool() == straightLine)
+    {
+        if ((event->button() & Qt::LeftButton) && _isDrawing)
+        {
+            if (_workingTool != element)
+            {
+                drawLineTo(event->pos());
+            }
+        }
+
+    }
+    else
+    {
+        if ((event->buttons() & Qt::LeftButton) && _isDrawing)
+        {
+            if (_workingTool != element)
+            {
+                drawLineTo(event->pos());
+            }
+        }
+    }
+    
+
 
 }
 
@@ -204,7 +321,8 @@ void CanvasView::mouseReleaseEvent(QMouseEvent* event)
     {
         if (_workingTool == element)
         {
-            placeElement(event->x(), event->y());
+           placeElement(event->x(), event->y());
+           elementPreviewHide();
         }
         else if (_workingTool == textbox)
         {
@@ -217,7 +335,38 @@ void CanvasView::mouseReleaseEvent(QMouseEvent* event)
         
         _isDrawing = false;
     }
+    else if ((event->button() == Qt::RightButton))
+    {
+        elementPreviewHide();
+    }
 
+    if (_workingTool != element)
+    {
+       
+        drawingToolPreviewDisplay(event->x(), event->y());
+    }
+    else
+    {
+        drawingToolPreviewHide();
+    }
+
+}
+
+void CanvasView::enterEvent(QEvent* event)
+{
+    auto m_mousePos = this->mapFromGlobal(QCursor::pos());
+    if (_workingTool != element)
+    {
+        drawingToolPreviewDisplay(m_mousePos.x(), m_mousePos.y());
+    }
+    else
+    {
+        drawingToolPreviewHide();
+    }
+}
+
+void CanvasView::leaveEvent(QEvent* event)
+{
 }
 
 /*
@@ -243,9 +392,12 @@ void CanvasView::resizeEvent(QResizeEvent* event)
         int newWidth = qMax(width() + 128, _image.width());
         int newHeight = qMax(height() + 128, _image.height());
         resizeImage(&_image, QSize(newWidth, newHeight));
+        _previewDisplay->resize(newWidth, newHeight);
+        _previewDisplay->updateGeometry();
         update();
     }
     QWidget::resizeEvent(event);
+    
 }
 
 /*
@@ -271,6 +423,9 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
         drawingColor = _eraserColor;
         drawingWidth = _eraserWidth;
         break;
+    case straightLine:
+        drawingColor = _straightLineColor;
+        drawingWidth = _straightLineWidth;
     default:
         break;
     }
@@ -280,6 +435,7 @@ void CanvasView::drawLineTo(const QPoint& endPoint)
         return;
     }
 
+    
     painter.setPen(QPen(drawingColor, drawingWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawLine(_lastKnownPoint, endPoint);
     int rad = (drawingWidth / 2) + 2;
@@ -305,12 +461,21 @@ void CanvasView::placeElement(int x, int y)
    {
        return;
    }
+   
+   QUndoCommand* tmp = new ComDrawerCommand(_image, tr("Added Element %1").arg(_elementPlacer));
+   _undoStack->push(tmp);
 
-   QPixmap scaledElement = elementToPlace.scaled(elementToPlace.width(), elementToPlace.height());
+   int width = _elementWidth == -1 ? elementToPlace.width() : _elementWidth;
+   int height = _elementHeight == -1 ? elementToPlace.height() : _elementHeight;
+   
+   QPixmap scaledElement = elementToPlace.scaled(width, height);
    QPainter painter(&_image);
    painter.drawPixmap(x, y, scaledElement.width(), scaledElement.height(), scaledElement);
    painter.end();
    update();
+   _canvasLogger->logger("Element Placed.");
+   
+   
    if (!_isModified)
    {
        _isModified = true;
@@ -331,7 +496,7 @@ void CanvasView::resizeImage(QImage* _image, const QSize& newSize)
     }
 
     QImage newImage(newSize, QImage::Format_RGB32);
-    newImage.fill(qRgb(255, 255, 255));
+    newImage.fill(Qt::white);
     QPainter painter(&newImage);
     painter.drawImage(QPoint(0, 0), *_image);
     *_image = newImage;
@@ -355,9 +520,12 @@ void CanvasView::clearActiveScreen()
 
     if (reply == QMessageBox::Yes)
     {
-        _image.fill(qRgb(255, 255, 255));
+        _image.fill(QColor(Qt::white).rgb());
         update();
+        _undoStack->clear();
         _isModified = false;
+        _canvasLogger->logger("Screen Cleared.");
+        _ElementName.clear();
     }
 
 }
@@ -583,6 +751,34 @@ bool CanvasView::openPanel()
     return false;
 }
 
+void CanvasView::openPNG()
+{
+    std::string output;
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open File"), QDir::currentPath());
+    if (!fileName.isEmpty())
+    {
+        QImage loadedImage;
+        if (!loadedImage.load(fileName))
+        {
+            output = "Failed to load image: " + fileName.toStdString();
+        }
+        else
+        {
+            _elementPlacer = fileName;
+            _workingTool = element;
+            drawingToolPreviewHide();
+            output = "Successfully added imgage: " + fileName.toStdString();
+        }
+    }
+    else
+    {
+       output = "Failed to load image: " + fileName.toStdString();
+       
+    }
+    _canvasLogger->logger(output);
+}
+
 /*
 * Opens the panel on the canvas.
 *
@@ -609,7 +805,8 @@ bool CanvasView::openImage(const QString& fileName)
 void CanvasView::newPanel()
 {
     _panelName = "";
-    _image.fill(qRgb(255, 255, 255));
+    _ElementName = "";
+    _image.fill(QColor(Qt::white).rgb());
     update();
     _isModified = false;
 }
@@ -629,6 +826,9 @@ void CanvasView::selectDefaultElement()
     QString selection = QInputDialog::getItem(this,selectionCaption, selectionLabel, defaultElements);
     _elementPlacer = "defaultElements/"+selection;
     _workingTool = element;
+    _elementWidth = -1;
+    _elementHeight = -1;
+    drawingToolPreviewHide();
 }
 
 /*
@@ -646,6 +846,9 @@ void CanvasView::selectCustomElement()
     QString selection = QInputDialog::getItem(this, selectionCaption, selectionLabel, customElements);
     _elementPlacer = "customElements/"+selection;
     _workingTool = element;
+    _elementWidth = -1;
+    _elementHeight = -1;
+    drawingToolPreviewHide();
 }
 
 /*
@@ -728,29 +931,7 @@ void CanvasView::removeEntry(int id)
 */
 void CanvasView::saveElement()
 {
-    QString filename;
-    if (_ElementName.isEmpty())
-    {
-        QString initPath = QDir::currentPath() + "/customElements/untilted";
-        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath, tr("%1 Files (*%2);;")
-            .arg(QString::fromLatin1(".PNG"))
-            .arg(QString::fromLatin1(".png")));
-        _ElementName = filename;
-    }
-    else
-    {
-        filename = _ElementName;
-    }
-
-    QImage elementImage = _image;
-    resizeImage(&elementImage, size());
-
-
-    if (elementImage.save(filename))
-    {
-        _isModified = false;
-    }
-
+    resizeCustomElement();
 }
 
 /*
@@ -783,3 +964,174 @@ void CanvasView::placeText(int x, int y)
     painter.end();
 }
 
+void CanvasView::modifiyElementSize()
+{
+    QDialog dialog(this);
+    // Use a layout allowing to have a label next to each field
+    QFormLayout form(&dialog);
+
+    // Add some text above the fields
+    form.addRow(new QLabel("Modify Selected Elemnt Height and Width"));
+
+    // Add the lineEdits with their respective labels
+    QList<QLineEdit*> fields;
+
+    QLineEdit* lineEdit = new QLineEdit(&dialog);
+    QString label = QString("Height");
+    form.addRow(label, lineEdit);
+    fields << lineEdit;
+    
+   QLineEdit* lineEdit_w = new QLineEdit(&dialog);
+   QString label_w = QString("Width");
+   form.addRow(label_w, lineEdit_w);
+
+    fields << lineEdit_w;
+
+    // Add some standard buttons (Cancel/Ok) at the bottom of the dialog
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+        Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+
+    // Show the dialog as modal
+    if (dialog.exec() == QDialog::Accepted) {
+        // If the user didn't dismiss the dialog, do something with the fields
+        QString tempQString;
+        int tempInt;
+        int count = 0;
+        foreach(QLineEdit * lineEdit, fields) {
+
+            tempQString = lineEdit->text();
+            tempInt = tempQString.split(" ")[0].toInt();
+            
+            if (count++ == 0)
+            {
+                _elementHeight = tempInt;
+            }
+            else
+            {
+                _elementWidth = tempInt;
+            }
+        }
+    }
+}
+
+/**
+* @brief Displays a preview of the element to be placed.
+* 
+* @params[in] x - x cooridnate of mouse.
+* @params[in] y - y cooridnate of mouse.
+*/
+void CanvasView::elementPreviewDisplay(int x, int y)
+{
+    QPixmap elementToPlace;
+
+    if (!elementToPlace.load(_elementPlacer))
+    {
+        return;
+    }
+
+    int width = _elementWidth == -1 ? elementToPlace.width() : _elementWidth;
+    int height = _elementHeight == -1 ? elementToPlace.height() : _elementHeight;
+
+    QPixmap scaledElement = elementToPlace.scaled(width, height);
+    
+ 
+    _previewDisplay->setStyleSheet("border-style: solid; border-width:2px; border-color:green;");
+    _previewDisplay->setGeometry(QRect(x, y, width, height));
+    _previewDisplay->setPixmap(scaledElement);
+    _previewDisplay->raise();
+    _previewDisplay->update();
+    _previewDisplay->show();
+}
+
+/**
+*@brief hides the element preview.
+*/
+void CanvasView::elementPreviewHide()
+{
+    _previewDisplay->hide();
+}
+
+void CanvasView::drawingToolPreviewDisplay(int x, int y)
+{
+    int drawingWidth = 0;
+    QPixmap workingToolBrush;
+
+    switch (_workingTool)
+    {
+    case pencil:
+        drawingWidth = _pencilWidth;
+        break;
+    case paint:
+        drawingWidth = _paintWidth;
+        break;
+    case eraser:
+        drawingWidth = _eraserWidth;
+        break;
+    case straightLine:
+        drawingWidth = _straightLineWidth;
+        break;
+    case textbox:
+        drawingWidth = _textboxWidth;
+        break;
+    default:
+        break;
+    }
+
+    if (drawingWidth == 0)
+    {
+        return;
+    }
+
+   /*  
+    QColor drawingColor;
+    QPainter painter(&workingToolBrush);
+    painter.setBrush(QBrush(drawingColor));
+    painter.drawEllipse(x, y, drawingWidth, drawingWidth);
+    painter.end();*/
+
+    int previewX = x - (drawingWidth / 2);
+    int previewY = y - (drawingWidth / 2);
+    _drawingToolPreviewDisplay->setStyleSheet("border-style: solid; border-width:2px; border-color:black;");
+    _drawingToolPreviewDisplay->setPixmap(workingToolBrush);
+    _drawingToolPreviewDisplay->setGeometry(QRect(previewX, previewY, drawingWidth, drawingWidth));
+    _drawingToolPreviewDisplay->raise();
+    _drawingToolPreviewDisplay->update();
+    _drawingToolPreviewDisplay->show();
+}
+void CanvasView::drawingToolPreviewHide()
+{
+    _drawingToolPreviewDisplay->hide();
+}
+
+void CanvasView::resizeCustomElement()
+{
+    _saveCustomElementPreview->elementPreviewDisplay(_image);
+    _saveCustomElementPreview->show();
+}
+
+void CanvasView::saveUpdatedCustomElement(QImage newImage)
+{
+
+    QString filename;
+    if (_ElementName.isEmpty())
+    {
+        QString initPath = QDir::currentPath() + "/customElements/untilted";
+        filename = QFileDialog::getSaveFileName(this, tr("Save"), initPath, tr("%1 Files (*%2);;")
+            .arg(QString::fromLatin1(".PNG"))
+            .arg(QString::fromLatin1(".png")));
+        _ElementName = filename;
+    }
+    else
+    {
+        filename = _ElementName;
+    }
+
+    if (newImage.save(filename))
+    {
+        _undoStack->clear();
+        _isModified = false;
+    }
+}

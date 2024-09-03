@@ -1,16 +1,21 @@
 #include "ComDrawer.h"
+#include "CanvasLogger.h"
+#include "CardMaster.h"
 
+
+bool _enableDeveloperMode = true;
 
 /*
 * Class constructor.
 */
 ComDrawer::ComDrawer(QWidget* parent)
 {
-	
-	createActions();
-	createMenus();
 	canvasView = new CanvasView();
 	comicBook = new ComicBook();
+	cardMaster = new CardMaster();
+	setMouseTracking(true);
+	createActions();
+	createMenus();
 	ui.setupUi(this);
 	setWindowTitle(tr("ComDrawer - Canvas View"));
 	setCentralWidget(canvasView);
@@ -81,6 +86,14 @@ void ComDrawer::selectTextBox()
 	canvasView->setWorkingToolSelection(3);
 }
 
+/*
+* Selects the Text Box tool.
+*/
+void ComDrawer::selectStraightLine()
+{
+	canvasView->setWorkingToolSelection(5);
+}
+
 
 /*
 * Calls canvasView's setColor.
@@ -111,7 +124,7 @@ void ComDrawer::clearActiveScreen()
 */
 void ComDrawer::openComicBookPreview()
 {
-	if (comicBook->getActiveComicBook() == "")
+	if (!_enableDeveloperMode && comicBook->getActiveComicBook() == "")
 	{
 		QMessageBox::critical(
 			this,
@@ -152,6 +165,7 @@ void ComDrawer::setPanel()
 void ComDrawer::savePanel()
 {
 	canvasView->saveMyPanel();
+	comicBook->refresh();
 }
 
 /*
@@ -210,6 +224,46 @@ void ComDrawer::saveElement()
 	canvasView->saveElement();
 }
 
+void ComDrawer::openPNG()
+{
+	canvasView->openPNG();
+}
+
+void ComDrawer::previewCardList()
+{
+	cardMaster->setMaximumHeight(900);
+	cardMaster->setMaximumWidth(1800);
+	cardMaster->resize(1800, 900);
+	cardMaster->refresh();
+	cardMaster->show();
+}
+void ComDrawer::createCardDesp()
+{
+
+}
+void ComDrawer::createCardList()
+{
+
+}
+void ComDrawer::openCardList() 
+{
+
+}
+
+void ComDrawer::setCardTitle() 
+{
+
+}
+void ComDrawer::saveCard()
+{
+
+}
+
+void ComDrawer::modifyElementSize()
+{
+	canvasView->modifiyElementSize();
+}
+
 /*
 	Creates the action commands, currenlty supports:
 		- about
@@ -231,6 +285,10 @@ void ComDrawer::createActions()
 	connect(_paintAct, SIGNAL(triggered()), SLOT(selectPaint()));
 	_textboxAct = new QAction(tr("&Enter Text"), this);
 	connect(_textboxAct, SIGNAL(triggered()), SLOT(selectTextBox()));
+
+	_straightLineAct = new QAction(tr("&Straight Line"), this);
+	connect(_straightLineAct, SIGNAL(triggered()), SLOT(selectStraightLine()));
+
 	_colorAct = new QAction(tr("&Change Color"), this);
 	_colorAct->setShortcut(tr("ctrl+f"));
 	connect(_colorAct, SIGNAL(triggered()), SLOT(setColor()));
@@ -241,6 +299,7 @@ void ComDrawer::createActions()
 	_toolOptions.append(_paintAct);
 	_toolOptions.append(_eraserAct);
 	_toolOptions.append(_textboxAct);
+	_toolOptions.append(_straightLineAct);
 	_toolOptions.append(_colorAct);
 	_toolOptions.append(_widthAct);
 	_setPanelAct = new QAction(tr("&Set Panel"), this);
@@ -271,7 +330,37 @@ void ComDrawer::createActions()
 	_customElementAct = new QAction(tr("Custom Element"));
 	connect(_customElementAct, SIGNAL(triggered()), SLOT(selectCustomElement()));
 
-	
+	_undoAction = canvasView->getUndoStack()->createUndoAction(this, tr("&Undo"));
+	_undoAction->setShortcuts(QKeySequence::Undo);
+	_redoAction = canvasView->getUndoStack()->createRedoAction(this, tr("&Redo"));
+	_redoAction->setShortcuts(QKeySequence::Redo);	
+
+	_pngUploaderAct = new QAction(tr("Open .png file"));
+	connect(_pngUploaderAct, SIGNAL(triggered()), SLOT(openPNG()));
+
+	_eventLogViewAct = new QAction(tr("Open Event Log View"));
+	connect(_eventLogViewAct, SIGNAL(triggered()), SLOT(createEventLogViewer()));
+	 _undoViewAct = new QAction(tr("Open Undo View"));
+	 connect(_undoViewAct, SIGNAL(triggered()), SLOT(createUndoView()));
+
+	 _cardViewAct = new QAction(tr("Preview Card List"));
+	 connect(_cardViewAct, SIGNAL(triggered()), SLOT(previewCardList()));
+	 _cardDespAct = new QAction(tr("Set Card Description"));
+	 connect(_cardDespAct, SIGNAL(triggered()), SLOT(createCardDesp()));
+
+	 _createDeckAct = new QAction(tr("Create Card List"));
+	  connect(_createDeckAct, SIGNAL(triggered()), SLOT(createCardList()));
+	  _openDeckAct = new QAction(tr("Open Card List"));
+	  connect(_openDeckAct, SIGNAL(triggered()), SLOT(openCardList()));
+
+	  _saveCardAct = new QAction(tr("Save Card"));
+	  connect(_saveCardAct, SIGNAL(triggered()), SLOT(saveCard()));
+	  _setCardTitle = new QAction(tr("Set Card Title"));
+	  connect(_setCardTitle, SIGNAL(triggered()), SLOT(setCardTitle()));
+
+	  _modifyElementAct = new QAction(tr("Modify Element Size"));
+	  connect(_modifyElementAct, SIGNAL(triggered()), SLOT(modifyElementSize()));
+
 }
 
 /*
@@ -288,6 +377,13 @@ void ComDrawer::createMenus()
 	fileMenu->addSeparator();
 	fileMenu->addAction(_openComicAct);
 	fileMenu->addAction(_createComicAct);
+	//fileMenu->addSeparator();
+	//fileMenu->addAction(_createDeckAct);
+	//fileMenu->addAction(_openDeckAct);
+	//fileMenu->addAction(_saveCardAct);
+	fileMenu->addSeparator();
+	fileMenu->addAction(_undoAction);
+	fileMenu->addAction(_redoAction);
 	
 	
 	_toolsMenu = new QMenu(tr("&Tools"), this);
@@ -311,13 +407,58 @@ void ComDrawer::createMenus()
 	_elementMenu = new QMenu(tr("&Elements"));
 	_elementMenu->addAction(_defaultElementAct);
 	_elementMenu->addAction(_customElementAct);
+	_elementMenu->addAction(_pngUploaderAct);
+	_elementMenu->addAction(_modifyElementAct);
 
+	_developerMenu = new QMenu(tr("&Developer Mode"));
+	_developerMenu->addAction(_eventLogViewAct);
+	_developerMenu->addAction(_undoViewAct);
+
+	_cardViewMenu = new QMenu(tr("Card Manager"));
+	_cardViewMenu->addAction(_cardViewAct);
+	_cardViewMenu->addAction(_openDeckAct);
+	_cardViewMenu->addAction(_setCardTitle);
 
 	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(_toolsMenu);
 	menuBar()->addMenu(_elementMenu);
 	menuBar()->addAction(_setPanelAct);
 	menuBar()->addAction(_previewComicAct);
+	//menuBar()->addMenu(_cardViewMenu);
 	menuBar()->addAction(_clearAct);
+	if (_enableDeveloperMode)
+	{
+		menuBar()->addMenu(_developerMenu);
+	}
 	menuBar()->addMenu(_helpMenu);
 }
+
+void ComDrawer::createUndoView()
+{
+	QDockWidget* undoDockWidget = new QDockWidget;
+	undoDockWidget->setWindowTitle(tr("Command List"));
+	undoDockWidget->setWidget(new QUndoView(canvasView->getUndoStack()));
+	addDockWidget(Qt::RightDockWidgetArea, undoDockWidget);	
+}
+
+void ComDrawer::createEventLogViewer()
+{
+	QTextEdit* logOutput = new QTextEdit();
+	logOutput->setReadOnly(true);
+	QString logFileOutput = CanvasLogger::getInstance()->readLog();
+
+	if (logFileOutput.isEmpty())
+	{
+		logFileOutput = tr("Failed to get log data");
+		
+	}
+	logOutput->setPlainText(logFileOutput);		
+
+	QDockWidget* textDockWidget = new QDockWidget;
+	textDockWidget->setWindowTitle(tr("Log"));
+	textDockWidget->setWidget(logOutput);
+	addDockWidget(Qt::LeftDockWidgetArea, textDockWidget);
+
+}
+
+

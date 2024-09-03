@@ -8,6 +8,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <QUndoStack>
+#include "ComDrawerCommand.h"
+#include "CanvasLogger.h"
+#include <QLabel>
+//#include "ResizeCustomElement.h"
+#include "ElementPreview.h"
+
 
 /*
 * The purpose of this class is to control the Canvas widget.
@@ -23,7 +30,8 @@ public:
 		paint = 1,
 		eraser = 2,
 		textbox = 3,
-		element = 4
+		element = 4,
+		straightLine = 5
 	};
 	CanvasView(QWidget* parent = nullptr);
 	~CanvasView();
@@ -51,6 +59,15 @@ public:
 	void saveElement();
 	int getTextBoxWidth();
 	void setTextBoxWidth(int newWidth);
+	QUndoStack* getUndoStack();
+	static CanvasView* getInstance();
+	void setImage(QImage updatedImage);
+	QImage getImage();
+	void openPNG();
+	void modifiyElementSize();
+	void setStraightLineWidth(int width);
+	void setStraightLineColor(const QColor& color);
+	void saveUpdatedCustomElement(QImage newImage);
 	
 
 protected:
@@ -59,7 +76,8 @@ protected:
 	void mouseReleaseEvent(QMouseEvent* event) override;
 	void paintEvent(QPaintEvent* event) override;
 	void resizeEvent(QResizeEvent* event)override;
-	
+	void enterEvent(QEvent* event)override;
+	void leaveEvent(QEvent* event)override;
 	
 
 private:
@@ -74,11 +92,18 @@ private:
 	bool checkExists(int panelId);
 	void placeElement(int x, int y);
 	void placeText(int x, int y);
+	void elementPreviewDisplay(int x, int y);
+	void elementPreviewHide();
+	void drawingToolPreviewDisplay(int x, int y);
+	void drawingToolPreviewHide();
+	void resizeCustomElement();
 
 	int _pencilWidth;
 	int _eraserWidth;
 	int _paintWidth;
 	int _textboxWidth;
+	int _elementWidth;
+	int _elementHeight;
 	bool _isDrawing;
 	bool _isModified;
 	QColor _pencilColor;
@@ -92,7 +117,16 @@ private:
 	QString _ElementName;
 	std::string _activeComicBookConfigurationFile;
 	QString _elementPlacer;
-	
-
+	QUndoStack* _undoStack;
+	CanvasLogger* _canvasLogger;
+	int _old_x;
+	int _old_y;
+	int _old_w;
+	int _old_h;
+	QLabel* _previewDisplay;
+	QLabel* _drawingToolPreviewDisplay;
+	QColor _straightLineColor;
+	int _straightLineWidth;
+	ElementPreview* _saveCustomElementPreview;	
 };
 
