@@ -1,0 +1,13 @@
+() ====== Canvas View Logger Start ======
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Element Placed.
+() Screen Cleared.
