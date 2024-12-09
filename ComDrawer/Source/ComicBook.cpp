@@ -8,17 +8,17 @@ ComicBook::ComicBook(QWidget* parent)
 	createActions();
 	createMenus();
 	ui.setupUi(this);
-	setWindowTitle(tr("ComDrawer - Comic Book Preview"));
+	setWindowTitle(tr("ComDrawer - Comic Book Preview Cover Page"));
 	currentPage = 0;
 	pageCount = 5;
 	comicBookArea = new QWidget();
 	maxPanelCount = ((pageCount - 2) * 6) + 1;
-	_maxWidth = 1800;
+	_maxWidth = 1500;
 	_maxHeight = 900;
 	_panelWidth = _maxWidth / 2;
 	_panelHeight = _maxHeight / 3;
 	
-	resize(500, 500);
+	//resize(500, 500);
 }
 
 /*
@@ -37,6 +37,20 @@ void ComicBook::refresh()
 	delete comicBookArea;
 	comicBookArea = new QWidget();
 	comicBookArea->resize(_maxWidth, _maxHeight);
+	std::string pageValue = "ComDrawer - Comic Book Preview ";
+	if (currentPage == coverPage)
+	{
+		pageValue += "Cover Page";
+	}
+	else if (currentPage == backPage)
+	{
+		pageValue += "Back Page";
+	}
+	else
+	{
+		pageValue += "Page Number: " + std::to_string(currentPage);
+	}
+	setWindowTitle(tr(pageValue.c_str()));
 	readTextFile();
 }
 
@@ -244,6 +258,35 @@ void ComicBook::downloadComicBook()
 	painter.end();
 }
 
+void ComicBook::nextPage() {
+	if (currentPage != backPage) {
+		setPageNumber(currentPage + 1 );
+		refresh();
+	}
+	else {
+		QMessageBox::critical(
+			this,
+			tr("ComDrawer"),
+			tr("Cannot go past the last page."));
+	}
+	
+}
+
+void ComicBook::prevPage() {
+	if (currentPage != 0) {
+		setPageNumber(currentPage - 1);
+		refresh();
+	}
+	else {
+		QMessageBox::critical(
+			this,
+			tr("ComDrawer"),
+			tr("Cannot go past the first page."));
+	}
+
+}
+
+
 /*
 * Create the actions for the ComicBook Window.
 */
@@ -253,10 +296,14 @@ void ComicBook::createActions()
 	connect(addPageAct, SIGNAL(triggered()), SLOT(addPage()));
 	removePageAct = new QAction(tr("&Remove Page"), this);
 	connect(removePageAct, SIGNAL(triggered()), SLOT(removePage()));
-	pagesAct = new QAction(tr("&Select Page"), this);
+	pagesAct = new QAction(tr("&Jump To Page"), this);
 	connect(pagesAct, SIGNAL(triggered()), SLOT(pageSelect()));
 	downloadComicAct = new QAction(tr("&Download Comic"), this);
 	connect(downloadComicAct, SIGNAL(triggered()), SLOT(downloadComicBook()));
+	nextPageAct = new QAction(tr("&Next Page"), this);
+	connect(nextPageAct, SIGNAL(triggered()), SLOT(nextPage()));
+	prevPageAct = new QAction(tr("&Previous Page"), this);
+	connect(prevPageAct, SIGNAL(triggered()), SLOT(prevPage()));
 }
 
 /*
@@ -270,6 +317,8 @@ void ComicBook::createMenus()
 	menuBar()->addAction(addPageAct);
 	menuBar()->addAction(removePageAct);
 	menuBar()->addAction(pagesAct);
+	menuBar()->addAction(nextPageAct);
+	menuBar()->addAction(prevPageAct);
 }
 
 /*
@@ -389,7 +438,7 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 		imageLabel->setMaximumWidth(_maxWidth);
 		page->addWidget(imageLabel, 0, 0, 3, 2);
 	}
-	else if (panel == maxPanelCount-1)
+	else if (panel == maxPanelCount)
 	{
 		panelImage = panelImage.scaled(_maxWidth, _maxHeight, Qt::KeepAspectRatioByExpanding);
 		imageLabel->setPixmap(QPixmap::fromImage(panelImage));
@@ -436,6 +485,7 @@ void ComicBook::uploadImage(int panel, std::string filename, QGridLayout* page)
 		else if (panelKey == 6)
 		{
 			page->addWidget(imageLabel, 2, 1, 1, 1);
+			
 		}
 	}
 	comicBookArea->setLayout(page);

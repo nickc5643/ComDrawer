@@ -67,6 +67,8 @@ private slots:
     void removePage();
     void pageSelect();
     void downloadComicBook();
+    void nextPage();
+    void prevPage();
 
 private:
     void createActions();
@@ -82,6 +84,8 @@ private:
     QAction* addPageAct;
     QAction* removePageAct;
     QAction* downloadComicAct;
+    QAction* nextPageAct;
+    QAction* prevPageAct;
     QMenu* fileMenu;
     Ui::ComicBook ui;
     QWidget* comicBookArea;
